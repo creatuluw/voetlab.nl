@@ -12,6 +12,9 @@ tests/out/
 # Editable install metadata
 *.egg-link
 
+# Agent / session state (pi harness)
+.pi/
+
 # OS / editor
 .DS_Store
 .idea/
