@@ -7,7 +7,7 @@ okf_version: "0.1"
 <!-- wiki-nav:start -->
 ## Navigation map
 
-Auto-generated detailed index of every docs/wiki/ concept — the map the LLM uses to locate information. 6 concept(s). Regenerated on init and on wiki_mark_synced. Generated 2026-07-29T17:34:33.293Z.
+Auto-generated detailed index of every docs/wiki/ concept — the map the LLM uses to locate information. 7 concept(s). Regenerated on init and on wiki_mark_synced. Generated 2026-07-29T20:23:29.604Z.
 
 Each entry: `concept-id` (pass to wiki_get) — title — description.
 
@@ -18,11 +18,15 @@ Each entry: `concept-id` (pass to wiki_get) — title — description.
 
 ### Architecture
 
-- `architecture/file-tree` — File tree — Complete annotated file listing for the voetlab project — every path with a one-line function summary.
+- `architecture/file-tree` — File tree — Annotated project file tree with per-entry function summaries.
 
 ### Pages
 
 - `pages/TEMPLATES` — Page Templates — Reference templates for Concept, Entity, and Artifact pages. Follow these when using wiki_note_page.
+
+### Rules
+
+- `rules/remove-all-references-when-deleting-a-wiki-concept` — Remove all references when deleting a wiki concept — Guideline
 
 ### Learnings
 

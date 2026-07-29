@@ -2,33 +2,46 @@
 type: Glossary
 title: Glossary
 description: Key terms for this project.
-timestamp: "2026-07-29T17:16:52.594Z"
+timestamp: "2026-07-29T20:21:57.442Z"
 ---
 
 # Glossary
 
 | Term | Definition |
 |------|------------|
-| voetlab | The standalone, copyable football video-analytics framework this project ships. Python 3.10+, MIT. |
-| voetlab | The product (voetlab.nl) that voetlab powers — broadcast-footage match analytics. |
-| Result | The universal success indicator (`core.result`). Every feature returns `Result.Ok(value, **meta)` / `Result.Fail(error, **meta)`; `bool(result)` reads success. |
-| Provenance | Frame traceability (`core.provenance.attach_provenance`). Stamps each event with the `source_frames` it came from. |
-| Feature | A single pipeline unit, one per file, registered via `@feature(name, deps=[...])`. |
-| PipelineState | The shared clipboard the runner threads between features; each result lands in `state.data[name]`. |
-| `run` / `run_feature` | Top-level API. `run(video)` = full default graph; `run_feature(name, video)` = isolate one stage. |
-| `compare` | Runner helper that diffs two metric snapshots for before/after analysis. |
-| DEFAULT_FEATURES | The default pipeline graph; includes `reliability`, so every run auto-emits per-stat confidence. |
-| SAHI | Sliced Aided Hyper Inference. N× tiled inference that lifts ball recall from ~1% (COCO) to ~98% with a specialist model. |
-| Ball recall / coverage | Fraction of frames the real ball is detected on — the key CV-quality signal feeding reliability. |
-| TVCalib | Full broadcast-camera solver (WACV23, MM4SPA/tvcalib) that yields an accurate pixel→metre homography. |
-| Homography | The 3×3 transform mapping broadcast pixels to real pitch metres (105×68 m); unlocks true-pitch stats, heatmaps, tactics. |
-| DLT | Direct Linear Transform — the line-correspondence homography fallback (SoccerNet/sn-calibration baseline). |
-| Metric space | Real-world pitch coordinates (metres) as opposed to raw pixel coordinates. |
-| ByteTrack / BoT-SORT | Multi-object trackers. ByteTrack (supervision) is default; BoT-SORT/OC-SORT (ultralytics) via the tracker factory adds CMC/ReID. |
-| ID fragmentation | A tracking failure where one player gets many IDs across pan/zoom — degrades per-player stats. |
-| Pitch control | (Tactics) Spearman-style field giving P(team A controls) at each pitch point from player reach/time-to-reach. |
-| Voronoi / dominant region | (Tactics) Tessellation of the pitch into each player's nearest territory; yields team-area ratio. |
-| Reliability signal | voetlab's product moat: an honest, automatic per-stat confidence derived from measurable CV-quality (ball coverage, tracking stability, interpolation ratio, calibration confidence). |
-| Footage-driven test | A feature's co-located test that runs on `football-1.mp4`, asserts `Result.ok`, and dumps artifacts to `tests/out/<feature>/`. |
-| `[vision]` / `[viz]` / `[dev]` | Optional extras in `pyproject.toml`: vision = ultralytics+supervision; viz = matplotlib+mplsoccer; dev = pytest. |
-| OKF | The knowledge-wiki bundle format this `docs/wiki/` follows (concepts, decisions, rules, learnings, preferences). |
+| voetlab | The standalone, copyable football video-analytics framework that is the engine behind voetlab.nl. |
+| Result | The universal success indicator (`core.result.Result`) returned by every feature; has `ok / value / error / meta`; `bool(result)` reads success. |
+| Feature | A distinct pipeline unit; one feature per file, registered via `@feature(name, deps=[...])`. |
+| Pipeline / runner | The dependency-ordered executor (`pipeline/runner.py`) that threads a shared `PipelineState`, collects `Result`s, and flags failures without crashing. |
+| PipelineState | The shared "clipboard" the runner threads between features; each feature's `Result.value` lands in `state.data[name]` for downstream readers. |
+| Provenance / source_frames | Frame index(es) stamped onto every event via `core.provenance` so any event traces back to the footage. |
+| Footage-driven test | A per-feature test that runs on the canonical `football-1.mp4` clip, asserts `Result.ok`, and dumps artifacts to `tests/out/<feature>/`. |
+| Graceful failure | A failing feature is flagged in `res.value["failed"]` rather than raising; the run completes and reports all failures. |
+| run / run_feature | Top-level API: `run(video)` runs the full pipeline; `run_feature(name, video)` isolates one stage. |
+| meta | The optional `meta` dict passed to a run, carrying opt-in knobs like `ball_model_path`, `ball_method`, `calib_checkpoint`, `tvcalib_path`, `max_frames`, `fps`, `width`. |
+| Detection | Per-frame YOLO inference of persons (COCO class 0) and ball; the first pipeline stage. |
+| detect_ball / SAHI | Sliced (tiled) inference with a specialist football-ball model yielding ~98% ball-frame recall vs ~1–18% for stock COCO class 32. |
+| Track (player tracker) | ByteTrack multi-object tracking over person boxes; produces per-frame `track_id`-bearing entries. |
+| ID fragmentation | ByteTrack assigning a single player many IDs across a pan/zoom — degrades per-player stats; the reason BoT-SORT (T9) is offered. |
+| Ball tracker / ball trajectory | Ball-per-frame output; linear interpolation (default) or Kalman constant-velocity (`ball_method="kalman"`, T6); synthetic points carry `confidence=0.0`. |
+| Team classifier | KMeans k=2 on median HSV torso color, with circular hue (T1) and per-track majority vote (T2) stabilization. |
+| Role filter | Pure bbox-centroid geometry heuristics labeling each track `player` / `gk` / `referee` (T3). |
+| Homography (H) | The 3×3 image→template (broadcast px → real-world metres) mapping; computed by keypoints+DLT or the TVCalib solver. |
+| IFAB pitch | The reference pitch dimensions (105 m × 68 m) used as the template for calibration. |
+| Keypoint | A pitch-landmark point detected on the broadcast frame, paired with its known template coordinate to estimate the homography. |
+| DLT-from-lines | Direct Linear Transform homography estimated from line correspondences (SoccerNet/sn-calibration baseline). |
+| TVCalib | The WACV'23 full camera solver (AdamW, ~2000 steps) that projects a template ground grid through a solved camera to derive an accurate H; the primary calibration path. |
+| calibrate | The calibration feature that samples frames, runs the TVCalib solver (τ=0.05 loss gate) with DLT fallback (reproj < 15 m), and publishes `H` to `state.meta`. |
+| metric (space) | Real-world metres coordinates obtained by warping pixel tracks (player feet) through `H`; what unlocks true distance/speed/heatmaps. |
+| Events | On-ball actions (possession, passes, tackles, interceptions) derived from tracks+ball+teams, each frame-provenanced. |
+| Stats | Terminal per-player/per-team aggregates: distance, top speed, sprints, pass/tackle/possession counts (pixels unless calibrated). |
+| Pitch control | Spearman model giving P(team A controls) per pitch cell from time-to-reach influence (T11). |
+| Voronoi / dominant region | Tessellation giving each team's nearest-player territory area ratio (T12). |
+| Reliability signal | voetlab's per-stat 0–1 confidence propagated from measurable CV-quality inputs (ball coverage, interpolation ratio, track fragmentation, homography conf). |
+| homography_conf | A reliability input currently hardcoded to `1.0` (not yet wired from calibration) — see the reliability learning. |
+| tracking_stability | A reliability proxy = `1 − max(0, n_tracks − 22)/22`; a fragmentation indicator, not a true tracker-quality metric. |
+| viz / charts | mplsoccer adapters producing matplotlib `Figure` objects (heatmap, pass network, radar); headless, no UI. |
+| DEFAULT_FEATURES | The wired default graph, which includes `reliability`, so every run auto-emits a per-stat confidence. |
+| compare | A runner helper that diffs two metric snapshots (baseline vs current) for before/after analysis. |
+| T-codes (T1–T13) | Upgrade task identifiers in the dev log (e.g. T4=homography, T6=Kalman ball, T8=SAHI ball, T9=BoT-SORT, T11=pitch control, T12=Voronoi, T13=charts). |
+| OKF | The Open Knowledge Format used for `docs/wiki/` — frontmatter-typed concepts (Decisions, Rules, Learnings, Preferences, Pages). |

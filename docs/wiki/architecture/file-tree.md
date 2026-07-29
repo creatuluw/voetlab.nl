@@ -1,223 +1,216 @@
 ---
 type: Artifact
 title: File tree
-description: Complete annotated file listing for the voetlab project — every path with a one-line function summary.
-timestamp: "2026-07-29T17:16:52.600Z"
+description: Annotated project file tree with per-entry function summaries.
+timestamp: "2026-07-29T20:21:57.442Z"
 ---
 
-# File tree — generated 2026-07-29T17:16:52.600Z
+# File tree — generated 2026-07-29T17:47:57.540Z
 # Respects .wiki_ignore exclusions.
 # [description] — shorthand summary of each file's function
 
 .
-├── __pycache__/ [compiled bytecode cache for top-level test runs; auto-generated, ignored]
-├── .pi/ [pi coding-agent session/config data for this project]
-│   └── todos/ [file-based todo store the pi agent harness reads/writes]
-├── .pytest_cache/ [pytest's local cache of last test-run state]
-│   ├── v/ [pytest cache version directory]
-│   │   └── cache/ [cache contents]
-│   │       ├── lastfailed [node ids of tests that failed on the last run]
-│   │       └── nodeids [all collected test node ids from the last run]
-│   ├── .gitignore [ignores the pytest cache from version control]
-│   ├── CACHEDIR.TAG [marker identifying this as a cache directory]
-│   └── README.md [pytest's stock readme explaining the cache]
-├── docs/ [project documentation: build guide, dev log, transcript, generated site, OKF wiki]
-│   ├── site/ [generated, self-contained documentation site]
-│   │   └── index.html [HTML docs site: sidebar nav, search, per-feature quality cards]
-│   ├── wiki/ [OKF knowledge-wiki bundle: overview, glossary, decisions, rules, learnings, pages]
-│   │   ├── architecture/ [architecture artifacts]
-│   │   │   └── file-tree.md [this file: complete annotated project file listing]
-│   │   ├── decisions/ [major decisions / architecture decision records (ADRs)]
-│   │   │   └── index.md [index of recorded decisions]
-│   │   ├── learnings/ [captured learnings, insights, gotchas]
-│   │   │   └── index.md [index of recorded learnings]
-│   │   ├── pages/ [Concept / Entity / Artifact wiki pages]
-│   │   │   ├── artifacts/ [artifact pages — diagrams, specs, deliverables]
-│   │   │   │   └── index.md [index of artifact pages]
-│   │   │   ├── concepts/ [concept pages — abstract ideas and definitions]
-│   │   │   │   └── index.md [index of concept pages]
-│   │   │   ├── entities/ [entity pages — concrete named things]
-│   │   │   │   └── index.md [index of entity pages]
-│   │   │   ├── index.md [pages landing / overview of page categories]
-│   │   │   └── TEMPLATES.md [reference templates for Concept, Entity, Artifact pages]
-│   │   ├── preferences/ [captured coding style / tool / convention preferences]
-│   │   │   └── index.md [index of recorded preferences]
-│   │   ├── rules/ [reusable heuristics, guidelines, conventions]
-│   │   │   └── index.md [index of recorded rules]
-│   │   ├── glossary.md [project glossary of key terms]
-│   │   ├── index.md [wiki home: navigation map + OKF bundle intro]
-│   │   ├── last_updated.md [timestamp marking the wiki's last sync with the codebase]
-│   │   ├── log.md [wiki change log]
-│   │   └── overview.md [system overview: what the project contains and its structure]
-│   ├── BUILD_FROM_SCRATCH.md [ordered, TDD-locked todos to reproduce the framework (target: 121 tests green)]
-│   ├── DEVELOPMENT_LOG.md [narrative build log: phases, measured quality wins, decisions, bugfixes]
-│   └── SESSION_TRANSCRIPT.jsonl [verbatim turn-by-turn JSONL log of the build session — large, raw]
-├── voetlab/ [the framework package: one feature per file, folder per domain, co-located tests]
-│   ├── __pycache__/ [bytecode cache for the package; auto-generated, ignored]
-│   ├── calibration/ [pitch homography: broadcast px → real-world metres]
-│   │   ├── __pycache__/ [bytecode cache; auto-generated]
-│   │   ├── tests/ [calibration unit + footage tests]
-│   │   │   ├── __pycache__/ [bytecode cache; auto-generated]
-│   │   │   ├── __init__.py [marks tests/ as a package]
-│   │   │   ├── test_calibrate.py [tests the calibrate feature (TVCalib → H; DLT fallback)]
-│   │   │   ├── test_homography_from_keypoints.py [tests keypoint → homography path]
-│   │   │   ├── test_homography_lines.py [tests DLT-from-line-correspondences homography]
-│   │   │   ├── test_homography.py [tests the pure cv2 homography engine + self-verify]
-│   │   │   ├── test_keypoint_quality.py [tests keypoint quality / calibration acceptance]
-│   │   │   └── test_keypoint.py [tests pitch-landmark keypoint detection]
-│   │   ├── __init__.py [package marker]
-│   │   ├── features.py [Calibration feature (reg'd "calibrate"): TVCalib solver primary → H; DLT fallback]
-│   │   ├── homography_lines.py [DLT homography from LINE correspondences (SoccerNet/sn-calibration baseline)]
-│   │   ├── homography.py [pure cv2 pitch-homography engine: estimate, px_to_meters, warp, self-verify]
-│   │   ├── keypoint.py [pitch-landmark keypoint detection → homography point pairs (detector half of T4)]
-│   │   ├── metric.py [bridge: convert pixel tracks to metric space via a homography (feeds T4/T5/T11/T12)]
-│   │   ├── README.md [calibration domain guide]
-│   │   └── tvcalib_solver.py [TVCalib full camera solver → homography (the ACCURATE calibration path)]
-│   ├── core/ [shared contracts, no feature logic: Result, provenance, fixtures]
-│   │   ├── __pycache__/ [bytecode cache; auto-generated]
-│   │   ├── tests/ [core contract tests]
-│   │   │   ├── __pycache__/ [bytecode cache; auto-generated]
-│   │   │   ├── __init__.py [marks tests/ as a package]
-│   │   │   ├── test_fixtures.py [tests the footage test harness (loads frames / dumps artifacts)]
-│   │   │   ├── test_provenance.py [tests attach_provenance frame stamping]
-│   │   │   └── test_result.py [tests the Result success-indicator (Ok/Fail/bool)]
-│   │   ├── __init__.py [package marker]
-│   │   ├── fixtures.py [footage-driven test harness: load_sample_frames, footage_meta, dump_artifacts]
-│   │   ├── provenance.py [attach_provenance: stamp events with source_frames for traceability]
-│   │   ├── README.md [core domain guide]
-│   │   └── result.py [Result dataclass: the universal success indicator (Ok/Fail; bool() reads success)]
-│   ├── detection/ [per-frame detection — the pipeline entry point]
-│   │   ├── __pycache__/ [bytecode cache; auto-generated]
-│   │   ├── tests/ [detection unit + footage tests]
-│   │   │   ├── __pycache__/ [bytecode cache; auto-generated]
-│   │   │   ├── __init__.py [marks tests/ as a package]
-│   │   │   ├── test_detect_ball.py [tests high-recall ball detection (SAHI + specialist model)]
-│   │   │   ├── test_detect.py [tests YOLO person+ball per-frame detection (mocked + smoke)]
-│   │   │   ├── test_sahi.py [tests SAHI sliced-inference helper]
-│   │   │   └── test_vision_config.py [tests vision/ultralytics configuration handling]
-│   │   ├── __init__.py [package marker]
-│   │   ├── detect.py [YOLO person+ball per-frame detection + detect_ball_sahi (SAHI high-recall ball)]
-│   │   └── README.md [detection domain guide]
-│   ├── docs/ [in-package documentation generator]
-│   │   ├── __pycache__/ [bytecode cache; auto-generated]
-│   │   ├── tests/ [doc-generator tests]
-│   │   │   ├── __pycache__/ [bytecode cache; auto-generated]
-│   │   │   ├── __init__.py [marks tests/ as a package]
-│   │   │   └── test_docs.py [tests that FEATURES.md / the site are generated correctly]
-│   │   ├── __init__.py [package marker]
-│   │   └── build_docs.py [generates the FEATURES.md manifest + the HTML docs site]
-│   ├── events/ [possession / passes / tackles / interceptions — all frame-provenanced]
-│   │   ├── __pycache__/ [bytecode cache; auto-generated]
-│   │   ├── tests/ [events tests]
-│   │   │   ├── __pycache__/ [bytecode cache; auto-generated]
-│   │   │   ├── __init__.py [marks tests/ as a package]
-│   │   │   ├── test_events.py [tests event detection (passes/tackles) + non-empty provenance]
-│   │   │   └── test_possession_every_frame.py [tests per-frame possession assignment]
-│   │   ├── __init__.py [package marker]
-│   │   ├── events.py [detect_events(tracks, ball, teams) → Result; feature "events"]
-│   │   └── README.md [events domain guide]
-│   ├── pipeline/ [feature registry, runner, default graph, CLI]
-│   │   ├── __pycache__/ [bytecode cache; auto-generated]
-│   │   ├── tests/ [pipeline tests]
-│   │   │   ├── __pycache__/ [bytecode cache; auto-generated]
-│   │   │   ├── __init__.py [marks tests/ as a package]
-│   │   │   ├── test_default.py [tests default-graph wiring + end-to-end smoke]
-│   │   │   └── test_runner.py [tests registry / runner / compare / single-feature isolation]
-│   │   ├── __init__.py [package marker]
-│   │   ├── cli.py [CLI: `python -m voetlab.pipeline.cli <video> [--feature NAME] [--max-frames N]`]
-│   │   ├── default.py [imports all features so they register; exposes run() / run_feature()]
-│   │   ├── README.md [pipeline domain guide]
-│   │   ├── registry.py [@feature decorator + global registry; registered()]
-│   │   └── runner.py [PipelineState clipboard; dep-order execution, failure flagging, run_feature, compare]
-│   ├── reliability/ [per-stat confidence — the voetlab reliability signal]
-│   │   ├── __pycache__/ [bytecode cache; auto-generated]
-│   │   ├── tests/ [reliability tests]
-│   │   │   ├── __pycache__/ [bytecode cache; auto-generated]
-│   │   │   ├── __init__.py [marks tests/ as a package]
-│   │   │   ├── test_reliability_feature.py [tests the reliability pipeline feature wrapper]
-│   │   │   └── test_reliability.py [tests compute_reliability from CV-quality signals]
-│   │   ├── __init__.py [package marker]
-│   │   ├── features.py [Reliability feature wrapper — registered into the default pipeline]
-│   │   ├── README.md [reliability domain guide]
-│   │   └── reliability.py [compute_reliability: per-stat confidence from ball/track/calib quality]
-│   ├── stats/ [per-player + per-team physical & event aggregates — terminal stage]
-│   │   ├── __pycache__/ [bytecode cache; auto-generated]
-│   │   ├── tests/ [stats tests]
-│   │   │   ├── __pycache__/ [bytecode cache; auto-generated]
-│   │   │   ├── __init__.py [marks tests/ as a package]
-│   │   │   ├── test_metric_stats.py [tests metre/km·h stats after calibration]
-│   │   │   └── test_stats.py [tests pixel distance/speed/possession aggregation on synthetic tracks]
-│   │   ├── __init__.py [package marker]
-│   │   ├── README.md [stats domain guide]
-│   │   └── stats.py [compute_stats(tracks, teams, events): distance/speed/sprints + event aggregates]
-│   ├── tactics/ [pitch control + Voronoi on the metric pitch]
-│   │   ├── __pycache__/ [bytecode cache; auto-generated]
-│   │   ├── tests/ [tactics tests]
-│   │   │   ├── __pycache__/ [bytecode cache; auto-generated]
-│   │   │   ├── __init__.py [marks tests/ as a package]
-│   │   │   ├── test_metric_and_features.py [tests metric conversion + tactics feature wrappers]
-│   │   │   ├── test_pitch_control.py [tests the Spearman pitch-control surface (synthetic)]
-│   │   │   └── test_voronoi.py [tests Voronoi dominant-region tessellation + team-area ratio]
-│   │   ├── __init__.py [package marker]
-│   │   ├── features.py [T11/T12 feature wrappers: read pixel tracks + meta H → metric → tactics]
-│   │   ├── pitch_control.py [T11 — Spearman pitch-control surface: P(team A) per pitch point]
-│   │   ├── README.md [tactics domain guide]
-│   │   └── voronoi.py [T12 — Voronoi / dominant-region territory via cKDTree rasterization]
-│   ├── tests/ [top-level package tests]
-│   │   ├── __pycache__/ [bytecode cache; auto-generated]
-│   │   └── test_report.py [tests the end-to-end report generator + CLI]
-│   ├── tracking/ [player/ball trackers, Kalman trajectory, team classifier, role filter, tracker factory]
-│   │   ├── __pycache__/ [bytecode cache; auto-generated]
-│   │   ├── tests/ [tracking tests]
-│   │   │   ├── __pycache__/ [bytecode cache; auto-generated]
-│   │   │   ├── __init__.py [marks tests/ as a package]
-│   │   │   ├── test_ball_prefers_detect_ball.py [tests that ball tracking prefers SAHI ball output]
-│   │   │   ├── test_ball_tracker.py [tests linear-interpolation ball tracking]
-│   │   │   ├── test_ball_trajectory.py [tests T6 Kalman constant-velocity trajectory]
-│   │   │   ├── test_player_tracker.py [tests ByteTrack player tracking]
-│   │   │   ├── test_role_filter.py [tests T3 referee/goalkeeper role filter (bbox heuristics)]
-│   │   │   ├── test_team_circular.py [tests T1 circular-hue team classification]
-│   │   │   ├── test_team_classifier.py [tests KMeans k=2 HSV team classification]
-│   │   │   ├── test_team_stabilizer.py [tests T2 per-track majority-vote team stabilization]
-│   │   │   └── test_tracker_factory.py [tests the ByteTrack/BoT-SORT tracker factory]
-│   │   ├── __init__.py [package marker]
-│   │   ├── ball_tracker.py [ball trajectory via linear interpolation; feature "ball"]
-│   │   ├── ball_trajectory.py [T6 constant-velocity Kalman ball trajectory (upgrade over linear)]
-│   │   ├── voetlab_botsort.yaml [BoT-SORT config for ultralytics model.track (T9 tracker factory)]
-│   │   ├── player_tracker.py [ByteTrack player tracking over detection boxes; feature "track"]
-│   │   ├── README.md [tracking domain guide]
-│   │   ├── role_filter.py [T3 referee/goalkeeper role filter (pure bbox-centroid heuristics)]
-│   │   ├── team_classifier.py [team classification: KMeans k=2 on median HSV torso color; feature "teams"]
-│   │   └── tracker_factory.py [T9 tracker factory: ByteTrack (supervision) or BoT-SORT/OC-SORT]
-│   ├── viz/ [mplsoccer chart adapters — the dashboard chart layer]
-│   │   ├── __pycache__/ [bytecode cache; auto-generated]
-│   │   ├── tests/ [viz tests]
-│   │   │   ├── __pycache__/ [bytecode cache; auto-generated]
-│   │   │   ├── __init__.py [marks tests/ as a package]
-│   │   │   └── test_charts.py [tests the chart adapters return matplotlib Figures]
-│   │   ├── __init__.py [package marker]
-│   │   ├── charts.py [T13 mplsoccer chart adapters (heatmap, pass-network, radar) → matplotlib Figure]
-│   │   └── README.md [viz domain guide]
-│   ├── __init__.py [package root: exposes run()/run_feature() convenience API + __version__]
-│   └── report.py [end-to-end report generator + CLI: writes stats.json + reliability.json + charts]
-├── voetlab.egg-info/ [editable-install metadata generated by setuptools (`pip install -e .`)]
-│   ├── dependency_links.txt [legacy setuptools dependency links (empty here)]
-│   ├── PKG-INFO [package metadata: name, version, summary, license]
-│   ├── requires.txt [declared runtime + optional dependencies ([vision]/[viz]/[dev])]
-│   ├── SOURCES.txt [list of files packaged into the distribution]
-│   └── top_level.txt [top-level importable package name(s): voetlab]
-├── tests/ [repo-level smoke tests + sample output artifacts]
-│   ├── __pycache__/ [bytecode cache; auto-generated]
-│   ├── out/ [dumped artifacts from smoke / integration runs]
-│   │   ├── detect/ [detect-stage smoke artifacts]
-│   │   │   ├── annotated.png [annotated detection frame written by a smoke test]
-│   │   │   └── results.json [detection boxes-by-frame JSON from a smoke test]
-│   │   └── pipeline/ [full-pipeline smoke artifacts]
-│   │       └── results.json [full-pipeline run output JSON]
-│   ├── __init__.py [marks tests/ as a package]
-│   └── test_imports.py [verifies the package imports cleanly and exposes run/run_feature]
-├── .wiki_ignore [wiki staleness-ignore patterns (node_modules, __pycache__, etc.)]
-├── FEATURES.md [auto-generated feature manifest: one row per feature file]
-├── llms.txt [LLM-oriented project brief: entry points, docs map, per-domain guides]
-├── pyproject.toml [project config: metadata, dependencies, extras ([vision]/[viz]/[dev])]
-└── README.md [top-level readme: install, quickstart, layout, conventions]
+├── .git/ — the Git repository metadata, refs, hooks, and content-addressed object store (config/HEAD/index/COMMIT_EDITMSG; refs/heads/main + remotes/origin/main; sample hooks; logs/reflog). The hundreds of .git/objects/<xx>/<hash> entries are loose Git objects (blobs/trees/commits keyed by SHA-1) plus pack/ and info/ — content-addressed history that changes every commit, so not annotated individually.
+├── .pi/ — pi coding-agent session/config state for this project (git-ignored, machine-local).
+├── .pytest_cache/ — pytest's run cache (git-ignored, regenerable).
+├── docs/ — project documentation: build guide, dev log, generated HTML site, and the OKF wiki.
+│   ├── site/ — the generated, self-contained HTML reference site.
+│   │   └── index.html — single-page voetlab docs site (sidebar nav, search, collapsible per-feature cards, dark mode) emitted by voetlab/docs/build_docs.py.
+│   ├── wiki/ — the OKF knowledge wiki bundle (this tree).
+│   │   ├── architecture/ — architecture artifacts.
+│   │   │   └── file-tree.md — the full annotated project file tree with per-entry [description] placeholders (this document).
+│   │   ├── changelog/ — month-bucketed wiki changelog append-logs.
+│   │   │   └── 2026-07.jsonl — JSONL changelog entries recording wiki edits made in 2026-07.
+│   │   ├── decisions/ — Architecture Decision Records (major decisions/direction shifts).
+│   │   │   └── index.md — index listing all decision concepts (currently empty/seed).
+│   │   ├── learnings/ — captured non-obvious facts and gotchas.
+│   │   │   ├── canonical-repo-location-and-gitignore-policy.md — records the GitHub origin and what .gitignore treats as regenerable.
+│   │   │   ├── index.md — index of all learnings.
+│   │   │   └── reliability-signal-has-a-hardcoded-component.md — notes that homography_conf is hardcoded to 1.0 and tracking_stability is a proxy.
+│   │   ├── pages/ — Concept / Entity / Artifact pages for the project.
+│   │   │   ├── TEMPLATES.md — reference templates for writing Concept, Entity, and Artifact pages.
+│   │   │   ├── artifacts/ — Artifact-type pages (deliverables: diagrams, reports, specs).
+│   │   │   │   └── index.md — index of artifact pages.
+│   │   │   ├── concepts/ — Concept-type pages (abstract ideas, definitions, patterns).
+│   │   │   │   └── index.md — index of concept pages.
+│   │   │   ├── entities/ — Entity-type pages (concrete named things: endpoints, services, modules).
+│   │   │   │   └── index.md — index of entity pages.
+│   │   │   └── index.md — top-level index of all pages.
+│   │   ├── preferences/ — captured coding-style/tool conventions.
+│   │   │   └── index.md — index of preferences.
+│   │   ├── rules/ — reusable heuristics, guidelines, conventions.
+│   │   │   ├── index.md — index of rules.
+│   │   │   └── remove-all-references-when-deleting-a-wiki-concept.md — rule: strip all slug references when deleting a wiki concept.
+│   │   ├── glossary.md — project glossary (term → definition table).
+│   │   ├── index.md — wiki home: navigation map of every concept + section links.
+│   │   ├── last_updated.md — timestamp marker showing when the wiki was last synced to the code.
+│   │   ├── log.md — wiki activity log.
+│   │   ├── overview.md — project overview (system-structure summary).
+│   │   ├── wiki-viewer.html — standalone HTML viewer for browsing the wiki.
+│   │   └── wiki.js — JavaScript powering the wiki viewer.
+│   ├── BUILD_FROM_SCRATCH.md — ordered, TDD-locked todos to reproduce the exact voetlab framework (target: 121 tests green).
+│   └── DEVELOPMENT_LOG.md — dev-facing record of how the framework was built: phases, measured quality wins, decisions, and bugfixes.
+├── tests/ — top-level integration/acceptance tests (distinct from the per-domain feature tests).
+│   ├── __pycache__/ — compiled bytecode cache for tests/ (git-ignored).
+│   ├── out/ — inspectable artifacts dumped by footage-driven tests (git-ignored, regenerated each run).
+│   │   ├── detect/ — artifacts from the top-level detection smoke test.
+│   │   │   ├── annotated.png — an annotated sample frame showing detected boxes.
+│   │   │   └── results.json — detection results JSON for the smoke test.
+│   │   └── pipeline/ — artifacts from the top-level pipeline smoke test.
+│   │       └── results.json — pipeline run results JSON.
+│   ├── __init__.py — marks tests/ as a Python package.
+│   └── test_imports.py — smoke test asserting import voetlab and the public API (run, run_feature) are importable.
+├── voetlab/ — the framework package itself; standalone, copyable, no repo-specific imports.
+│   ├── __pycache__/ — compiled bytecode cache for the package root (git-ignored).
+│   ├── calibration/ — broadcast-pixel → real-world-metres homography domain.
+│   │   ├── __pycache__/ — compiled bytecode cache (git-ignored).
+│   │   ├── tests/ — co-located footage/unit tests for the calibration domain.
+│   │   │   ├── __pycache__/ — compiled bytecode cache (git-ignored).
+│   │   │   ├── __init__.py — marks the calibration tests as a package.
+│   │   │   ├── test_calibrate.py — tests the calibrate feature wiring and its DLT fallback path.
+│   │   │   ├── test_homography.py — pure-engine tests for the cv2 homography engine + self_verify.
+│   │   │   ├── test_homography_from_keypoints.py — tests estimating H from keypoint point pairs.
+│   │   │   ├── test_homography_lines.py — DLT-from-line-correspondences tests.
+│   │   │   ├── test_keypoint.py — tests keypoint pairing/filtering/coverage helpers.
+│   │   │   └── test_keypoint_quality.py — tests keypoint-set quality gating.
+│   │   ├── __init__.py — marks calibration/ as a package.
+│   │   ├── features.py — the registered calibrate feature: samples frames, runs TVCalib (τ=0.05) with DLT fallback (reproj < 15 m), publishes H.
+│   │   ├── homography_lines.py — pure-numpy DLT homography from line correspondences (SoccerNet baseline).
+│   │   ├── homography.py — pure cv2 homography engine: estimate_homography (RANSAC), warp_points, px_to_meters, self_verify; IFAB PITCH_M = (105, 68).
+│   │   ├── keypoint.py — pitch-landmark keypoints → homography point pairs; named IFAB template points, ops integration, coverage/quality helpers.
+│   │   ├── metric.py — the bridge: warps each player's feet through H per frame into metric-space coords.
+│   │   ├── README.md — calibration domain docs (TVCalib solver + DLT fallback, quality, limitations).
+│   │   └── tvcalib_solver.py — the accurate path: runs TVCalib's full camera solver (AdamW, ~2000 steps) to derive H and loss.
+│   ├── core/ — shared, dependency-light foundation contracts (no CV logic).
+│   │   ├── __pycache__/ — compiled bytecode cache (git-ignored).
+│   │   ├── tests/ — co-located tests for the core contracts.
+│   │   │   ├── __pycache__/ — compiled bytecode cache (git-ignored).
+│   │   │   ├── __init__.py — marks core tests as a package.
+│   │   │   ├── test_fixtures.py — tests the footage test harness (skips gracefully if footage absent).
+│   │   │   ├── test_provenance.py — tests that events are stamped with source_frames.
+│   │   │   └── test_result.py — tests the Result success indicator (Ok/Fail/bool()).
+│   │   ├── __init__.py — marks core/ as a package.
+│   │   ├── fixtures.py — footage-driven test harness: load_sample_frames, footage_meta, dump_artifacts (default footage football-1.mp4).
+│   │   ├── provenance.py — attach_provenance(event, source_frames, **refs); required for all event-producing features.
+│   │   ├── README.md — core domain docs (Result, provenance, fixtures).
+│   │   └── result.py — the universal Result dataclass (Ok/Fail/ok/value/error/meta); bool(result) reads success.
+│   ├── detection/ — per-frame detection domain (pipeline entry point).
+│   │   ├── __pycache__/ — compiled bytecode cache (git-ignored).
+│   │   ├── tests/ — co-located detection tests.
+│   │   │   ├── __pycache__/ — compiled bytecode cache (git-ignored).
+│   │   │   ├── __init__.py — marks detection tests as a package.
+│   │   │   ├── test_detect_ball.py — tests the high-recall SAHI ball detector.
+│   │   │   ├── test_detect.py — mocked-YOLO unit tests + real-footage smoke dumping tests/out/detect/annotated.png.
+│   │   │   ├── test_sahi.py — tests SAHI sliced-inference behavior/config.
+│   │   │   └── test_vision_config.py — tests vision/SAHI configuration plumbing.
+│   │   ├── __init__.py — marks detection/ as a package.
+│   │   ├── detect.py — detect feature: YOLO person+ball per frame; helpers boxes_from_result, annotate; also detect_ball_sahi (T8 high-recall ball path).
+│   │   └── README.md — detection domain docs (YOLO detection + validated SAHI detect_ball).
+│   ├── docs/ — the documentation generator package.
+│   │   ├── __pycache__/ — compiled bytecode cache (git-ignored).
+│   │   ├── tests/ — co-located tests for the docs generator.
+│   │   │   ├── __pycache__/ — compiled bytecode cache (git-ignored).
+│   │   │   ├── __init__.py — marks docs tests as a package.
+│   │   │   └── test_docs.py — tests that build_docs parses features and emits manifest + HTML.
+│   │   ├── __init__.py — marks the docs generator as a package.
+│   │   └── build_docs.py — F6 generator: scans feature .py files, emits FEATURES.md manifest and docs/site/index.html.
+│   ├── events/ — on-ball event detection domain.
+│   │   ├── __pycache__/ — compiled bytecode cache (git-ignored).
+│   │   ├── tests/ — co-located event tests.
+│   │   │   ├── __pycache__/ — compiled bytecode cache (git-ignored).
+│   │   │   ├── __init__.py — marks events tests as a package.
+│   │   │   ├── test_events.py — synthetic scenarios asserting passes/tackles + non-empty provenance.
+│   │   │   └── test_possession_every_frame.py — tests per-frame possession determination.
+│   │   ├── __init__.py — marks events/ as a package.
+│   │   ├── events.py — events feature: possession/passes/tackles/interceptions, each carrying source_frames.
+│   │   └── README.md — events domain docs.
+│   ├── pipeline/ — feature registry, runner, default graph, and CLI.
+│   │   ├── __pycache__/ — compiled bytecode cache (git-ignored).
+│   │   ├── tests/ — co-located pipeline tests.
+│   │   │   ├── __pycache__/ — compiled bytecode cache (git-ignored).
+│   │   │   ├── __init__.py — marks pipeline tests as a package.
+│   │   │   ├── test_default.py — tests default wiring + end-to-end smoke on football-1.mp4.
+│   │   │   └── test_runner.py — tests registry, dependency-order runner, isolation, and compare.
+│   │   ├── __init__.py — marks pipeline/ as a package.
+│   │   ├── cli.py — CLI entry point: python -m voetlab.pipeline.cli <video> [--feature NAME] [--max-frames N].
+│   │   ├── default.py — imports all features (so they register) + exposes run(video) / run_feature(); defines DEFAULT_FEATURES.
+│   │   ├── README.md — pipeline domain docs (registry, runner, default graph, CLI).
+│   │   ├── registry.py — @feature(name, deps) decorator + global registry; registered().
+│   │   └── runner.py — PipelineState clipboard + run (dep-order, failure flagging) + run_feature (isolation) + compare (metric diff).
+│   ├── reliability/ — per-stat confidence (the voetlab "reliability signal").
+│   │   ├── __pycache__/ — compiled bytecode cache (git-ignored).
+│   │   ├── tests/ — co-located reliability tests.
+│   │   │   ├── __pycache__/ — compiled bytecode cache (git-ignored).
+│   │   │   ├── __init__.py — marks reliability tests as a package.
+│   │   │   ├── test_reliability_feature.py — tests the registered reliability feature wrapper.
+│   │   │   └── test_reliability.py — asserts honest ball coverage, interpolation ratio, fragmentation flagging, composite propagation.
+│   │   ├── __init__.py — marks reliability/ as a package.
+│   │   ├── features.py — the registered reliability feature (deps: ball, track); in DEFAULT_FEATURES.
+│   │   ├── README.md — reliability domain docs (signal inputs, composites, limitations).
+│   │   └── reliability.py — compute_reliability(...) producing ball coverage, interpolation ratio, tracking stability, homography conf, and composites.
+│   ├── stats/ — physical and event-aggregate statistics (terminal stage).
+│   │   ├── __pycache__/ — compiled bytecode cache (git-ignored).
+│   │   ├── tests/ — co-located stats tests.
+│   │   │   ├── __pycache__/ — compiled bytecode cache (git-ignored).
+│   │   │   ├── __init__.py — marks stats tests as a package.
+│   │   │   ├── test_metric_stats.py — tests metric-space (metres/km·h) stats via homography.
+│   │   │   └── test_stats.py — synthetic moving-track test for distance/speed + possession aggregation.
+│   │   ├── __init__.py — marks stats/ as a package.
+│   │   ├── README.md — stats domain docs.
+│   │   └── stats.py — stats feature: per-player/per-team distance, top speed, sprints, pass/tackle/possession counts.
+│   ├── tactics/ — pitch control and Voronoi territory (pure functions).
+│   │   ├── __pycache__/ — compiled bytecode cache (git-ignored).
+│   │   ├── tests/ — co-located tactics tests.
+│   │   │   ├── __pycache__/ — compiled bytecode cache (git-ignored).
+│   │   │   ├── __init__.py — marks tactics tests as a package.
+│   │   │   ├── test_metric_and_features.py — tests the tactics feature wrappers and metric conversion.
+│   │   │   ├── test_pitch_control.py — synthetic-position tests for the Spearman pitch-control surface.
+│   │   │   └── test_voronoi.py — tests dominant-region tessellation and team area ratio.
+│   │   ├── __init__.py — marks tactics/ as a package.
+│   │   ├── features.py — T11/T12 feature wrappers reading pixel tracks + H, converting to metric, computing tactics.
+│   │   ├── pitch_control.py — T11 Spearman pitch-control: per-cell P(team A controls) from time-to-reach influence.
+│   │   ├── README.md — tactics domain docs (pitch control + Voronoi; status, metric dependency).
+│   │   └── voronoi.py — T12 Voronoi/dominant-region tessellation via cKDTree rasterization.
+│   ├── tests/ — cross-domain package-level tests (e.g. the report generator).
+│   │   ├── __pycache__/ — compiled bytecode cache (git-ignored).
+│   │   └── test_report.py — tests the end-to-end report generator (voetlab.report).
+│   ├── tracking/ — player/ball tracking, team classification, roles.
+│   │   ├── __pycache__/ — compiled bytecode cache (git-ignored).
+│   │   ├── tests/ — co-located tracking tests.
+│   │   │   ├── __pycache__/ — compiled bytecode cache (git-ignored).
+│   │   │   ├── __init__.py — marks tracking tests as a package.
+│   │   │   ├── test_ball_prefers_detect_ball.py — tests that the ball path prefers SAHI detect_ball output when available.
+│   │   │   ├── test_ball_tracker.py — tests linear ball interpolation behavior.
+│   │   │   ├── test_ball_trajectory.py — tests the Kalman constant-velocity ball trajectory (T6).
+│   │   │   ├── test_player_tracker.py — tests ByteTrack player tracking over detection boxes.
+│   │   │   ├── test_role_filter.py — tests referee/goalkeeper role heuristics (T3).
+│   │   │   ├── test_team_circular.py — tests circular-hue team classification (T1).
+│   │   │   ├── test_team_classifier.py — tests KMeans k=2 HSV torso team classification.
+│   │   │   ├── test_team_stabilizer.py — tests per-track majority-vote team stabilization (T2).
+│   │   │   └── test_tracker_factory.py — tests the ByteTrack/BoT-SORT tracker factory (T9).
+│   │   ├── __init__.py — marks tracking/ as a package.
+│   │   ├── ball_tracker.py — ball feature: linear ball interpolation; synthetic points marked confidence=0.0.
+│   │   ├── ball_trajectory.py — T6 constant-velocity Kalman ball trajectory (pure numpy); ball_method="kalman".
+│   │   ├── player_tracker.py — track feature: ByteTrack player tracking over person boxes.
+│   │   ├── README.md — tracking domain docs (player/ball trackers, Kalman, teams, roles, factory).
+│   │   ├── role_filter.py — T3 roles feature: pure bbox-centroid heuristics → player/gk/referee.
+│   │   ├── team_classifier.py — teams feature: KMeans k=2 on median HSV torso color (T1 circular hue, T2 majority vote).
+│   │   ├── tracker_factory.py — T9 tracker factory: ByteTrack (supervision) or BoT-SORT/OC-SORT (ultralytics model.track).
+│   │   └── voetlab_botsort.yaml — BoT-SORT config used by the ultralytics tracker path.
+│   ├── viz/ — mplsoccer chart adapters (dashboard chart engine).
+│   │   ├── __pycache__/ — compiled bytecode cache (git-ignored).
+│   │   ├── tests/ — co-located viz tests.
+│   │   │   ├── __pycache__/ — compiled bytecode cache (git-ignored).
+│   │   │   ├── __init__.py — marks viz tests as a package.
+│   │   │   └── test_charts.py — each adapter returns a matplotlib.figure.Figure (headless).
+│   │   ├── __init__.py — marks viz/ as a package.
+│   │   ├── charts.py — T13 mplsoccer adapters: heatmap, pass_network, radar → matplotlib Figures.
+│   │   └── README.md — viz domain docs (adapters, headless rendering, limitations).
+│   ├── __init__.py — package root; exposes __version__ and top-level run / run_feature convenience API.
+│   └── report.py — end-to-end report generator + CLI: runs the pipeline → summary.json, stats.json, reliability.json, and best-effort chart PNGs.
+├── .gitignore — ignores regenerable build/test artifacts (__pycache__/, .pytest_cache/, tests/out/, *.egg-info/) and machine-local state (.pi/).
+├── .wiki_ignore — paths excluded from wiki staleness detection / file-tree generation (node_modules, dist, build, caches, .pi/, etc.).
+├── FEATURES.md — auto-generated feature manifest: one row per feature file (folder/file/summary).
+├── llms.txt — machine-facing summary for LLMs: overview, entry points, and doc links.
+├── pyproject.toml — PEP 621 project metadata: name, version, deps, optional [vision]/[viz]/[dev] extras, setuptools build config.
+└── README.md — human-facing entry point: quickstart, install, layout, and framework conventions.
