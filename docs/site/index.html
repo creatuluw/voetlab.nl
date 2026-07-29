@@ -1,0 +1,147 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>pitchkit — framework docs</title>
+<style>
+:root{--bg:#0f1115;--fg:#e7e9ee;--muted:#9aa3b2;--accent:#36f;--card:#161922;--bd:#262b36}
+@media (prefers-color-scheme: light){:root{--bg:#fafafa;--fg:#161922;--muted:#5b6472;--accent:#14f;--card:#fff;--bd:#e3e6ee}}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--fg);line-height:1.5}
+.layout{display:grid;grid-template-columns:260px 1fr;max-width:1200px;margin:0 auto}
+aside{position:sticky;top:0;align-self:start;max-height:100vh;overflow:auto;padding:18px;border-right:1px solid var(--bd)}
+aside h1{font-size:1.1rem;margin:.2rem 0 .6rem}aside a{display:block;color:var(--muted);text-decoration:none;padding:3px 6px;border-radius:6px;font-size:.85rem}
+aside a:hover{background:var(--card);color:var(--fg)}.nav-group summary{font-weight:600;margin:8px 0 4px;color:var(--fg)}
+main{padding:24px}header{margin-bottom:18px}header .meta{color:var(--muted);font-size:.9rem}
+pre{background:var(--card);border:1px solid var(--bd);padding:12px;border-radius:8px;white-space:pre-wrap;font-size:.8rem;color:var(--muted)}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:14px 16px;margin-bottom:12px}
+.card h2{font-size:1rem;margin:0 0 4px}.card h2 span{color:var(--muted)}
+.summary{color:var(--muted);margin:0 0 8px;font-size:.92rem}
+details summary{cursor:pointer;color:var(--accent);font-size:.85rem}
+code{background:var(--card);border:1px solid var(--bd);padding:1px 5px;border-radius:5px;font-size:.85em}
+.toolbar{position:fixed;right:16px;bottom:16px;display:flex;gap:8px}
+.toolbar button{background:var(--accent);color:#fff;border:0;border-radius:8px;padding:8px 12px;cursor:pointer;font-size:.85rem}
+#search{width:100%;margin:6px 0;padding:6px;border-radius:6px;border:1px solid var(--bd);background:var(--card);color:var(--fg)}
+.pipe{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}.pipe span{background:var(--card);border:1px solid var(--bd);border-radius:20px;padding:4px 12px;font-size:.8rem}
+@media print{aside,.toolbar{display:none}.layout{grid-template-columns:1fr}}
+</style></head><body>
+<div class="toolbar"><button onclick="window.print()">Print</button></div>
+<div class="layout"><aside>
+<h1>pitchkit</h1>
+<input id="search" placeholder="filter features..." oninput="filterCards()">
+<details class="nav-group" open><summary>core</summary><a href="#core-fixtures.py">fixtures.py</a><a href="#core-provenance.py">provenance.py</a><a href="#core-result.py">result.py</a></details>
+<details class="nav-group" open><summary>detection</summary><a href="#detection-detect.py">detect.py</a></details>
+<details class="nav-group" open><summary>tracking</summary><a href="#tracking-ball_tracker.py">ball_tracker.py</a><a href="#tracking-ball_trajectory.py">ball_trajectory.py</a><a href="#tracking-player_tracker.py">player_tracker.py</a><a href="#tracking-role_filter.py">role_filter.py</a><a href="#tracking-team_classifier.py">team_classifier.py</a><a href="#tracking-tracker_factory.py">tracker_factory.py</a></details>
+<details class="nav-group" open><summary>calibration</summary><a href="#calibration-features.py">features.py</a><a href="#calibration-homography.py">homography.py</a><a href="#calibration-homography_lines.py">homography_lines.py</a><a href="#calibration-keypoint.py">keypoint.py</a><a href="#calibration-metric.py">metric.py</a><a href="#calibration-tvcalib_solver.py">tvcalib_solver.py</a></details>
+<details class="nav-group" open><summary>events</summary><a href="#events-events.py">events.py</a></details>
+<details class="nav-group" open><summary>stats</summary><a href="#stats-stats.py">stats.py</a></details>
+<details class="nav-group" open><summary>tactics</summary><a href="#tactics-features.py">features.py</a><a href="#tactics-pitch_control.py">pitch_control.py</a><a href="#tactics-voronoi.py">voronoi.py</a></details>
+<details class="nav-group" open><summary>reliability</summary><a href="#reliability-features.py">features.py</a><a href="#reliability-reliability.py">reliability.py</a></details>
+<details class="nav-group" open><summary>viz</summary><a href="#viz-charts.py">charts.py</a></details>
+<details class="nav-group" open><summary>pipeline</summary><a href="#pipeline-cli.py">cli.py</a><a href="#pipeline-default.py">default.py</a><a href="#pipeline-registry.py">registry.py</a><a href="#pipeline-runner.py">runner.py</a></details>
+</aside><main>
+<header><h1>pitchkit &mdash; standalone football video-analytics framework</h1>
+<div class="meta">Video &rarr; tracking, events, physical/tactical stats, viz. 28 feature files. Self-contained &amp; copyable.</div>
+<div class="pipe"><span>detect</span>&rarr;<span>track</span>&rarr;<span>ball</span>&rarr;<span>teams</span>&rarr;<span>events</span>&rarr;<span>stats</span></div>
+<pre>from pitchkit.pipeline.default import run, run_feature
+res = run("football-1.mp4", max_frames=50)         # full pipeline
+res.value["data"]["stats"]; res.value["failed"]    # outputs + any failures
+run_feature("detect", "football-1.mp4")            # isolate one stage</pre>
+</header>
+<section class="card" id="core-fixtures.py"><h2>core/<span>fixtures.py</span></h2><p class="summary">Footage-driven test harness + artifact dumping.</p><details><summary>Quality &amp; when to use</summary><pre>(see source)</pre></details></section>
+<section class="card" id="core-provenance.py"><h2>core/<span>provenance.py</span></h2><p class="summary">Provenance — trace every event back to the frame(s) it was captured from.</p><details><summary>Quality &amp; when to use</summary><pre>(see source)</pre></details></section>
+<section class="card" id="core-result.py"><h2>core/<span>result.py</span></h2><p class="summary">Result — the universal success indicator for every pitchkit feature.</p><details><summary>Quality &amp; when to use</summary><pre>(see source)</pre></details></section>
+<section class="card" id="detection-detect.py"><h2>detection/<span>detect.py</span></h2><p class="summary">P1 — per-frame detection (persons + ball) via YOLO.</p><details><summary>Quality &amp; when to use</summary><pre>What:  detect() runs YOLO per-frame; boxes_from_result() parses; annotate() draws.
+Does:  emits per-frame person + ball boxes (feature "detect"); the pipeline entry point.
+GOOD:  person detection (COCO class 0) — high recall on broadcast footage.
+WEAK:  the BALL — COCO class 32 = baseball/tennis, NOT football → ~18% frame coverage,
+       which STARVES every ball-dependent downstream stat (possession, passes, ...).
+When:  always first in the pipeline; inject `model=` in unit tests (no weight download).
+Upgrade: T8 — football-ball model + SAHI sliced inference (same interface, no downstream change).</pre></details></section>
+<section class="card" id="tracking-ball_tracker.py"><h2>tracking/<span>ball_tracker.py</span></h2><p class="summary">P3 — ball trajectory (linear interpolation).</p><details><summary>Quality &amp; when to use</summary><pre>What:  track_ball() linearly interpolates between sparse ball detections.
+Does:  a ball box (or None) for EVERY frame (feature "ball"); interpolated points are
+       marked confidence=0.0 so downstream can tell synthetic from real.
+GOOD:  fills short gaps so ball-dependent features have a position on most frames.
+WEAK:  LINEAR fill — wrong for curves/bounces/deflections; corrupts possession near gap
+       edges. Coverage is bounded by detect() ball recall (~18% real).
+When:  feature "ball", after "detect". Never fails (absent ball → coverage 0).
+Upgrade: T6 — Kalman constant-velocity trajectory (same output contract).</pre></details></section>
+<section class="card" id="tracking-ball_trajectory.py"><h2>tracking/<span>ball_trajectory.py</span></h2><p class="summary">T6 — Kalman constant-velocity ball trajectory (upgrade over linear interp).</p><details><summary>Quality &amp; when to use</summary><pre>(see source)</pre></details></section>
+<section class="card" id="tracking-player_tracker.py"><h2>tracking/<span>player_tracker.py</span></h2><p class="summary">P2 — player tracking (ByteTrack) over detection boxes.</p><details><summary>Quality &amp; when to use</summary><pre>What:  track_players() runs ByteTrack over the detect() person boxes.
+Does:  assigns stable track_ids across frames (feature "track"); consumes "detect".
+GOOD:  fast; stable IDs while players stay in frame.
+WEAK:  sv.ByteTrack is DEPRECATED (supervision 0.28+, removed in 0.30) and has NO
+       camera-motion compensation or ReID → ID FRAGMENTATION under broadcast pan/zoom
+       and on re-entry; per-player physical stats get split across IDs (undercounted).
+When:  feature "track", after "detect"; set fps via state.meta.
+Upgrade: T9 — BoT-SORT + CMC (sparseOptFlow) + optional ReID via a tracker_factory.</pre></details></section>
+<section class="card" id="tracking-role_filter.py"><h2>tracking/<span>role_filter.py</span></h2><p class="summary">P5/T3 — referee/goalkeeper role filter (pure bbox heuristics).</p><details><summary>Quality &amp; when to use</summary><pre>What:  classify_roles() — pure centroid heuristics over per-frame track boxes.
+Does:  maps each track_id → "player"|"gk"|"referee" (feature "roles"); consumes "track".
+GOOD:  cheap, deterministic, no video/ML needed; isolates the two non-outfield roles so
+       team clustering (T1/T2) and possession can exclude GKs + referees cleanly.
+WEAK:  broadcast pan/zoom + ByteTrack ID fragmentation (see player_tracker) mean centroid
+       spreads are unreliable — a GK re-appearing at the far end can get a huge spread and
+       be misread as a referee; an injured/off-pitch official may skew edge-band counts.
+When:  feature "roles", after "track"; pass width= for non-1920px footage.
+Upgrade: fuse with teams HSV (GKs wear a distinct kit color) and a persistence/ReID signal
+         once track ids are stable (T9 BoT-SORT) — role then becomes the AND of geometry + kit.</pre></details></section>
+<section class="card" id="tracking-team_classifier.py"><h2>tracking/<span>team_classifier.py</span></h2><p class="summary">P4 — team classification (KMeans k=2 on median HSV torso color).</p><details><summary>Quality &amp; when to use</summary><pre>What:  classify_teams() — KMeans k=2 on median HSV torso color; extract_torso_hsv().
+Does:  maps each track_id → "A"/"B" (feature "teams"); consumes "track"; needs the VIDEO.
+GOOD:  unsupervised 2-team split when kits are two clearly different colors; no roster.
+WEAK:  (1) hue is CIRCULAR so red (hue ~0 and ~180) splits wrongly; (2) k=2 can't also
+       separate GKs + referees; (3) no per-track majority vote → a player's label can
+       flip frame to frame.
+When:  feature "teams", after "track"; inject frame_source= in tests (no real video).
+Upgrade: T1 hue cos/sin + k&gt;=4, T2 per-track majority vote, T3 GK/referee filter.</pre></details></section>
+<section class="card" id="tracking-tracker_factory.py"><h2>tracking/<span>tracker_factory.py</span></h2><p class="summary">T9 — tracker factory: ByteTrack (supervision) or BoT-SORT/OC-SORT (ultralytics model.track).</p><details><summary>Quality &amp; when to use</summary><pre>(see source)</pre></details></section>
+<section class="card" id="calibration-features.py"><h2>calibration/<span>features.py</span></h2><p class="summary">Calibration feature — TVCalib solver (primary, accurate) → H; DLT fallback.</p><details><summary>Quality &amp; when to use</summary><pre>(see source)</pre></details></section>
+<section class="card" id="calibration-homography.py"><h2>calibration/<span>homography.py</span></h2><p class="summary">T4 — pitch homography pure engine: broadcast pixels → real-world meters.</p><details><summary>Quality &amp; when to use</summary><pre>(see source)</pre></details></section>
+<section class="card" id="calibration-homography_lines.py"><h2>calibration/<span>homography_lines.py</span></h2><p class="summary">DLT homography from LINE correspondences (SoccerNet/sn-calibration baseline).</p><details><summary>Quality &amp; when to use</summary><pre>(see source)</pre></details></section>
+<section class="card" id="calibration-keypoint.py"><h2>calibration/<span>keypoint.py</span></h2><p class="summary">T4 (detector half) — pitch landmark keypoints → homography point pairs.</p><details><summary>Quality &amp; when to use</summary><pre>(see source)</pre></details></section>
+<section class="card" id="calibration-metric.py"><h2>calibration/<span>metric.py</span></h2><p class="summary">T4/T5/T11/T12 bridge — convert pixel tracks to metric-space via a homography.</p><details><summary>Quality &amp; when to use</summary><pre>(see source)</pre></details></section>
+<section class="card" id="calibration-tvcalib_solver.py"><h2>calibration/<span>tvcalib_solver.py</span></h2><p class="summary">TVCalib full camera solver → homography (the ACCURATE calibration path).</p><details><summary>Quality &amp; when to use</summary><pre>(see source)</pre></details></section>
+<section class="card" id="events-events.py"><h2>events/<span>events.py</span></h2><p class="summary">P5 — events: possession, passes, tackles, interceptions — every event frame-provenanced.</p><details><summary>Quality &amp; when to use</summary><pre>What:  detect_events() — possession, passes, tackles, interceptions (all frame-provenanced).
+Does:  derives events from track+ball+teams (feature "events"); EVERY event carries
+       `source_frames` so you can trace it back to the exact frame(s).
+GOOD:  deterministic, cheap; reliable possession % and pass/turnover counts WHEN the
+       ball layer is dense.
+WEAK:  distance thresholds are in PIXELS (not pitch-calibrated); event counts scale with
+       ball coverage (~18% today → undercounted); no shots/dribbles/fouls; no intent/body-part.
+When:  feature "events", after track+ball+teams. Improves automatically as ball coverage
+       (T6/T8) and homography (T4) land.
+Upgrade: T7 per-frame velocity possession; T4 metric-space thresholds.</pre></details></section>
+<section class="card" id="stats-stats.py"><h2>stats/<span>stats.py</span></h2><p class="summary">P6 — physical + aggregate stats.</p><details><summary>Quality &amp; when to use</summary><pre>What:  compute_stats() — per-player + per-team physical &amp; event aggregates.
+Does:  distance/speed/sprints + passes/tackles/possession counts (feature "stats");
+       consumes track+teams+events.
+GOOD:  deterministic; full per-player + per-team summary.
+WEAK:  distances/speeds are in PIXELS (only RELATIVE comparisons valid until T4/T5);
+       sprint threshold is a pixel speed; inherits ID fragmentation from tracking.
+When:  feature "stats" (terminal output). Units become meters/km·h after homography.
+Upgrade: T4/T5 metric stats + Savitzky–Golay smoothing; T9 fixes ID fragmentation.</pre></details></section>
+<section class="card" id="tactics-features.py"><h2>tactics/<span>features.py</span></h2><p class="summary">T11/T12 feature wrappers — read pixel tracks + meta H, convert to metric, compute tactics.</p><details><summary>Quality &amp; when to use</summary><pre>(see source)</pre></details></section>
+<section class="card" id="tactics-pitch_control.py"><h2>tactics/<span>pitch_control.py</span></h2><p class="summary">T11 — Spearman pitch-control surface (probability team A controls each pitch point).</p><details><summary>Quality &amp; when to use</summary><pre>What:  compute_pitch_control() — team-A pitch-control probability surface.
+Does:  per grid cell, sums Gaussian 'reach' influences per team; P(A) = sumA / (sumA+sumB).
+GOOD:  pure numpy, vectorised over the whole pitch; clean spatial-dominance signal.
+WEAK:  SIMPLIFIED Spearman — reach = Gaussian falloff over time-to-reach (speed + reaction);
+       no acceleration model, no ball-arrival gate, stationary players floored to a walk.
+When:  NOT yet a pipeline feature (needs metric-space velocity from T4/T5). Pure function for
+       later wiring; unit-testable with synthetic metric positions.
+Upgrade: full Spearman — exponential intercept PDF, ball-travel-time gate, acceleration.</pre></details></section>
+<section class="card" id="tactics-voronoi.py"><h2>tactics/<span>voronoi.py</span></h2><p class="summary">T12 — Voronoi / dominant-region territory (metric pitch).</p><details><summary>Quality &amp; when to use</summary><pre>What:  dominant_regions() rasterizes the pitch on a step-m grid and assigns each
+       cell to its NEAREST player (scipy cKDTree); team_area_ratio() = A/(A+B).
+Does:  territory dominance in m² per team — "who owns the pitch".
+GOOD:  instant, deterministic, model-free — any metric player positions work.
+WEAK:  pure distance tessellation — ignores player velocity/closing speed, so it
+       is NOT true pitch *control* (that is T11); nearest-player only.
+When:  once you have metric (x, y) positions per player (calibration applied).
+       Pass synthetic positions in tests; never feed pixel coords.</pre></details></section>
+<section class="card" id="reliability-features.py"><h2>reliability/<span>features.py</span></h2><p class="summary">Reliability feature — per-stat confidence from ball/track quality signals.</p><details><summary>Quality &amp; when to use</summary><pre>(see source)</pre></details></section>
+<section class="card" id="reliability-reliability.py"><h2>reliability/<span>reliability.py</span></h2><p class="summary">T10 — reliability signal: an honest per-stat confidence from measurable CV-quality signals.</p><details><summary>Quality &amp; when to use</summary><pre>(see source)</pre></details></section>
+<section class="card" id="viz-charts.py"><h2>viz/<span>charts.py</span></h2><p class="summary">T13 — mplsoccer chart adapters (dashboard chart engine).</p><details><summary>Quality &amp; when to use</summary><pre>(see source)</pre></details></section>
+<section class="card" id="pipeline-cli.py"><h2>pipeline/<span>cli.py</span></h2><p class="summary">CLI: ``python -m pitchkit.pipeline.cli &lt;video&gt; [--feature NAME] [--max-frames N]``.</p><details><summary>Quality &amp; when to use</summary><pre>(see source)</pre></details></section>
+<section class="card" id="pipeline-default.py"><h2>pipeline/<span>default.py</span></h2><p class="summary">P7 — default pipeline wiring + single-feature isolation.</p><details><summary>Quality &amp; when to use</summary><pre>(see source)</pre></details></section>
+<section class="card" id="pipeline-registry.py"><h2>pipeline/<span>registry.py</span></h2><p class="summary">Feature registry.</p><details><summary>Quality &amp; when to use</summary><pre>(see source)</pre></details></section>
+<section class="card" id="pipeline-runner.py"><h2>pipeline/<span>runner.py</span></h2><p class="summary">Pipeline runner: dependency-order execution with shared state, failure flagging,</p><details><summary>Quality &amp; when to use</summary><pre>(see source)</pre></details></section>
+</main></div>
+<script>
+function filterCards(){var q=document.getElementById('search').value.toLowerCase();
+document.querySelectorAll('.card').forEach(function(c){c.style.display=(c.innerText.toLowerCase().indexOf(q)>-1)?'':'none'});}
+</script>
+</body></html>

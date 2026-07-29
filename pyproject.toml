@@ -1,0 +1,28 @@
+[project]
+name = "pitchkit"
+version = "0.1.0"
+description = "Standalone football video-analytics framework: detection, tracking, calibration, events, tactics, stats, viz."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = [
+    "numpy",
+    "opencv-python",
+    "scipy",
+    "scikit-learn",
+    "filterpy",
+]
+
+[project.optional-dependencies]
+# Install only what you need in the host project:
+#   pip install -e "./pitchkit[vision,viz]"
+vision = ["ultralytics", "supervision"]
+viz = ["matplotlib", "mplsoccer"]
+dev = ["pytest"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["pitchkit*"]

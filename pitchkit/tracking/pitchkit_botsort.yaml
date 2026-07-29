@@ -1,0 +1,19 @@
+# pitchkit BoT-SORT config (T9) — camera-motion compensation for broadcast pan/zoom.
+# Verified defaults from the Ultralytics tracking docs (BoT-SORT is the default tracker;
+# "best for general-purpose tracking, especially moving cameras" via CMC).
+# To cut ID swaps on look-alike kits, set `with_reid: true` and `model: <reid.onnx>`.
+tracker_type: botsort
+track_high_thresh: 0.5
+track_low_thresh: 0.1
+new_track_thresh: 0.5
+track_buffer: 60          # frames a lost track survives (longer for full-match occlusions)
+match_thresh: 0.8
+fuse_score: true
+
+# Camera Motion Compensation — THE fix for broadcast pan/zoom ID fragmentation:
+gmc_method: sparseOptFlow  # alternatives: orb, sift, ecc (more accurate, slower), none
+
+proximity_thresh: 0.5
+appearance_thresh: 0.8
+with_reid: false           # flip to true + set `model:` below to enable appearance ReID
+model: auto                # or a path to a ReID encoder (.onnx/.torchscript/.engine)

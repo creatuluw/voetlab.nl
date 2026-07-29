@@ -1,0 +1,692 @@
+<!doctype html>
+<html lang="en" data-theme="auto">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>voetlab.nl Wiki Viewer</title>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11/styles/github.min.css" media="all" id="hljs-light" disabled />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11/styles/github-dark.min.css" media="all" id="hljs-dark" disabled />
+  <script src="https://cdn.jsdelivr.net/npm/highlight.js@11/highlight.min.js"></script>
+  <style>
+    :root {
+      --bg: #ffffff; --surface: #f6f8fa; --surface-hover: #eaeef2;
+      --border: #d0d7de; --text: #1f2328; --text-secondary: #656d76;
+      --accent: #0969da; --accent-hover: #0550ae; --code-bg: #f6f8fa;
+      --code-text: #1f2328; --pre-bg: #ffffff; --quote-border: #d0d7de;
+      --quote-bg: #f6f8fa; --table-stripe: #f6f8fa; --link: #0969da;
+      --hr: #d8dee4; --danger: #cf222e; --sidebar-bg: #f6f8fa;
+      --sidebar-border: #d0d7de; --shadow: 0 1px 3px rgba(0,0,0,0.08);
+      --sidebar-width: 260px; --toolbar-height: 48px;
+    }
+    html[data-theme="dark"], html[data-theme="auto"].system-dark {
+      --bg: #0d1117; --surface: #161b22; --surface-hover: #1c2128;
+      --border: #30363d; --text: #e6edf3; --text-secondary: #8b949e;
+      --accent: #58a6ff; --accent-hover: #79c0ff; --code-bg: #161b22;
+      --code-text: #e6edf3; --pre-bg: #0d1117; --quote-border: #30363d;
+      --quote-bg: #161b22; --table-stripe: #161b22; --link: #58a6ff;
+      --hr: #21262d; --danger: #f85149; --sidebar-bg: #161b22;
+      --sidebar-border: #30363d; --shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+    *,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+      font-size: 16px; line-height: 1.7; color: var(--text); background: var(--bg);
+      min-height: 100vh; display: flex; flex-direction: column;
+    }
+    .app-layout { display: flex; flex: 1; min-height: 0; }
+    .sidebar {
+      width: var(--sidebar-width); flex-shrink: 0; background: var(--sidebar-bg);
+      border-right: 1px solid var(--sidebar-border); display: flex; flex-direction: column;
+      overflow: hidden; height: calc(100vh - var(--toolbar-height));
+      position: sticky; top: var(--toolbar-height);
+    }
+    .sidebar-header {
+      padding: 12px 16px; font-size: 13px; font-weight: 600;
+      color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.04em;
+      border-bottom: 1px solid var(--sidebar-border); flex-shrink: 0;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .sidebar-toggle-label { cursor: pointer; color: var(--accent); font-size: 11px; text-transform: none; letter-spacing: normal; font-weight: 500; }
+    .sidebar-toggle-label:hover { text-decoration: underline; }
+    .sidebar-scroll { flex: 1; overflow-y: auto; padding: 8px 0; }
+    .sidebar-scroll::-webkit-scrollbar { width: 6px; }
+    .sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
+    .sidebar-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    .tree-group-label {
+      padding: 4px 16px 2px; font-size: 11px; font-weight: 600;
+      color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.04em; margin-top: 4px;
+    }
+    .tree-item {
+      display: flex; align-items: center; gap: 6px; padding: 5px 16px 5px 24px;
+      font-size: 13px; color: var(--text); text-decoration: none; cursor: pointer;
+      transition: background 0.12s; border: none; background: none; width: 100%;
+      text-align: left; font-family: inherit; line-height: 1.4;
+    }
+    .tree-item:hover { background: var(--surface-hover); }
+    .tree-item.active { background: var(--accent); color: #fff; font-weight: 500; }
+    .tree-item .tree-icon { flex-shrink: 0; opacity: 0.6; }
+    .tree-item.active .tree-icon { opacity: 1; }
+    .tree-item .tree-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .main-area { flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden; }
+    .breadcrumb {
+      padding: 8px 24px; font-size: 13px; color: var(--text-secondary);
+      border-bottom: 1px solid var(--border); background: var(--bg);
+      display: flex; align-items: center; gap: 6px; flex-wrap: wrap; flex-shrink: 0;
+    }
+    .breadcrumb a { color: var(--link); text-decoration: none; cursor: pointer; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    .breadcrumb .separator { color: var(--text-secondary); font-size: 12px; }
+    .breadcrumb .current { color: var(--text); font-weight: 500; }
+    .toolbar {
+      height: var(--toolbar-height); flex-shrink: 0; background: var(--surface);
+      border-bottom: 1px solid var(--border); padding: 0 16px;
+      display: flex; align-items: center; gap: 10px; box-shadow: var(--shadow);
+      position: sticky; top: 0; z-index: 30;
+    }
+    .toolbar .file-name {
+      font-weight: 600; font-size: 13px; color: var(--text);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0;
+    }
+    .toolbar button {
+      background: var(--accent); color: #fff; border: none; border-radius: 6px;
+      padding: 5px 12px; font-size: 12px; font-weight: 500; cursor: pointer;
+      transition: background 0.15s; white-space: nowrap;
+    }
+    .toolbar button:hover { background: var(--accent-hover); }
+    .toolbar .nav-btn {
+      background: none; color: var(--text); border: 1px solid var(--border);
+      padding: 4px 8px; display: flex; align-items: center; gap: 2px; font-size: 13px;
+    }
+    .toolbar .nav-btn:hover { background: var(--surface-hover); }
+    .toolbar .nav-btn:disabled { opacity: 0.35; cursor: default; background: none; }
+    .theme-toggle {
+      background: none !important; color: var(--text) !important;
+      border: 1px solid var(--border) !important; padding: 4px 7px !important;
+      display: flex; align-items: center; gap: 4px; font-size: 13px !important;
+      border-radius: 6px; cursor: pointer; flex-shrink: 0;
+    }
+    .theme-toggle:hover { background: var(--surface-hover) !important; }
+    .theme-toggle svg { width: 15px; height: 15px; }
+    .container {
+      flex: 1; overflow-y: auto; padding: 32px 40px 80px;
+      max-width: 960px; margin: 0 auto; width: 100%;
+    }
+    .container::-webkit-scrollbar { width: 8px; }
+    .container::-webkit-scrollbar-track { background: transparent; }
+    .container::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    .md-body h1,.md-body h2,.md-body h3,.md-body h4,.md-body h5,.md-body h6 { margin-top: 24px; margin-bottom: 16px; font-weight: 600; line-height: 1.25; }
+    .md-body h1 { font-size: 2em; padding-bottom: 0.3em; border-bottom: 1px solid var(--hr); }
+    .md-body h2 { font-size: 1.5em; padding-bottom: 0.3em; border-bottom: 1px solid var(--hr); }
+    .md-body h3 { font-size: 1.25em; }
+    .md-body h4 { font-size: 1em; }
+    .md-body h5 { font-size: 0.875em; }
+    .md-body h6 { font-size: 0.85em; color: var(--text-secondary); }
+    .md-body p { margin-bottom: 16px; }
+    .md-body a { color: var(--link); text-decoration: none; cursor: pointer; }
+    .md-body a:hover { text-decoration: underline; }
+    .md-body strong { font-weight: 600; }
+    .md-body del { text-decoration: line-through; color: var(--text-secondary); }
+    .md-body ul,.md-body ol { margin-bottom: 16px; padding-left: 2em; }
+    .md-body li { margin-bottom: 4px; }
+    .md-body li > p { margin-bottom: 8px; }
+    .md-body blockquote { margin: 0 0 16px; padding: 8px 16px; border-left: 4px solid var(--quote-border); background: var(--quote-bg); color: var(--text-secondary); }
+    .md-body code { font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace; font-size: 85%; background: var(--code-bg); padding: 0.2em 0.4em; border-radius: 6px; color: var(--code-text); }
+    .md-body pre { margin-bottom: 16px; padding: 16px; overflow: auto; border-radius: 8px; background: var(--pre-bg); line-height: 1.5; }
+    .md-body pre code { display: block; background: none; padding: 0; border-radius: 0; font-size: 13px; white-space: pre; word-wrap: normal; }
+    .md-body table { border-collapse: collapse; width: 100%; margin-bottom: 16px; overflow: auto; }
+    .md-body th,.md-body td { border: 1px solid var(--border); padding: 8px 13px; }
+    .md-body th { font-weight: 600; background: var(--surface); }
+    .md-body tr:nth-child(even) td { background: var(--table-stripe); }
+    .md-body hr { border: none; border-top: 2px solid var(--hr); margin: 24px 0; }
+    .md-body img { max-width: 100%; border-radius: 8px; margin: 8px 0; }
+    .md-body input[type="checkbox"] { margin-right: 6px; accent-color: var(--accent); }
+    .loading-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 80px 20px; gap: 20px; }
+    .loading-state .spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top: 3px solid var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-state p { color: var(--text-secondary); font-size: 15px; }
+    .error-banner { background: #ffebe9; border: 1px solid var(--danger); color: var(--danger); padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; }
+    html[data-theme="dark"] .error-banner, html[data-theme="auto"].system-dark .error-banner { background: #3d1214; }
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .sidebar.show-mobile { display: flex; position: fixed; inset: 0; z-index: 50; width: 100%; height: 100%; top: var(--toolbar-height); }
+      .container { padding: 20px 16px 60px; }
+      .breadcrumb { padding: 6px 16px; font-size: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar" id="toolbar">
+    <button class="nav-btn" id="backBtn" title="Back" disabled>
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8L2 12L6 16"/><path d="M2 12H22"/></svg>
+    </button>
+    <button class="nav-btn" id="fwdBtn" title="Forward" disabled>
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8L22 12L18 16"/><path d="M2 12H22"/></svg>
+    </button>
+    <span class="file-name" id="fileName">voetlab.nl Wiki</span>
+    <button id="sidebarToggle" title="Toggle sidebar">&#9776;</button>
+    <button id="homeBtn">Home</button>
+    <button class="theme-toggle" id="themeToggle" title="Toggle theme">
+      <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+        <line x1="1" y1="12" x2="3" y2="12"/><line x21="21" y1="12" x2="23" y2="12"/>
+        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="app-layout">
+    <nav class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <span>Wiki Pages</span>
+        <span class="sidebar-toggle-label" id="closeSidebarBtn">&#215; close</span>
+      </div>
+      <div class="sidebar-scroll" id="sidebarScroll"></div>
+    </nav>
+
+    <div class="main-area">
+      <div class="breadcrumb" id="breadcrumb">
+        <a id="breadcrumbHome">Wiki</a>
+        <span class="separator">/</span>
+        <span class="current" id="breadcrumbCurrent">loading...</span>
+      </div>
+      <div class="container" id="container">
+        <article class="md-body" id="output">
+          <div class="loading-state"><div class="spinner"></div><p>Loading wiki...</p></div>
+        </article>
+      </div>
+    </div>
+  </div>
+
+  <script>
+var WIKI_CONTENT = {
+  "architecture/file-tree.md": `---
+type: Artifact
+title: File tree
+description: Complete annotated file listing for the pitchkit project — every path with a one-line function summary.
+timestamp: "2026-07-29T17:16:52.600Z"
+---
+
+# File tree — generated 2026-07-29T17:16:52.600Z
+# Respects .wiki_ignore exclusions.
+# [description] — shorthand summary of each file's function
+
+.
+├── __pycache__/ [compiled bytecode cache for top-level test runs; auto-generated, ignored]
+├── .pi/ [pi coding-agent session/config data for this project]
+│   └── todos/ [file-based todo store the pi agent harness reads/writes]
+├── .pytest_cache/ [pytest's local cache of last test-run state]
+│   ├── v/ [pytest cache version directory]
+│   │   └── cache/ [cache contents]
+│   │       ├── lastfailed [node ids of tests that failed on the last run]
+│   │       └── nodeids [all collected test node ids from the last run]
+│   ├── .gitignore [ignores the pytest cache from version control]
+│   ├── CACHEDIR.TAG [marker identifying this as a cache directory]
+│   └── README.md [pytest's stock readme explaining the cache]
+├── docs/ [project documentation: build guide, dev log, transcript, generated site, OKF wiki]
+│   ├── site/ [generated, self-contained documentation site]
+│   │   └── index.html [HTML docs site: sidebar nav, search, per-feature quality cards]
+│   ├── wiki/ [OKF knowledge-wiki bundle: overview, glossary, decisions, rules, learnings, pages]
+│   │   ├── architecture/ [architecture artifacts]
+│   │   │   └── file-tree.md [this file: complete annotated project file listing]
+│   │   ├── decisions/ [major decisions / architecture decision records (ADRs)]
+│   │   │   └── index.md [index of recorded decisions]
+│   │   ├── learnings/ [captured learnings, insights, gotchas]
+│   │   │   └── index.md [index of recorded learnings]
+│   │   ├── pages/ [Concept / Entity / Artifact wiki pages]
+│   │   │   ├── artifacts/ [artifact pages — diagrams, specs, deliverables]
+│   │   │   │   └── index.md [index of artifact pages]
+│   │   │   ├── concepts/ [concept pages — abstract ideas and definitions]
+│   │   │   │   └── index.md [index of concept pages]
+│   │   │   ├── entities/ [entity pages — concrete named things]
+│   │   │   │   └── index.md [index of entity pages]
+│   │   │   ├── index.md [pages landing / overview of page categories]
+│   │   │   └── TEMPLATES.md [reference templates for Concept, Entity, Artifact pages]
+│   │   ├── preferences/ [captured coding style / tool / convention preferences]
+│   │   │   └── index.md [index of recorded preferences]
+│   │   ├── rules/ [reusable heuristics, guidelines, conventions]
+│   │   │   └── index.md [index of recorded rules]
+│   │   ├── glossary.md [project glossary of key terms]
+│   │   ├── index.md [wiki home: navigation map + OKF bundle intro]
+│   │   ├── last_updated.md [timestamp marking the wiki's last sync with the codebase]
+│   │   ├── log.md [wiki change log]
+│   │   └── overview.md [system overview: what the project contains and its structure]
+│   ├── BUILD_FROM_SCRATCH.md [ordered, TDD-locked todos to reproduce the framework (target: 121 tests green)]
+│   ├── DEVELOPMENT_LOG.md [narrative build log: phases, measured quality wins, decisions, bugfixes]
+│   └── SESSION_TRANSCRIPT.jsonl [verbatim turn-by-turn JSONL log of the build session — large, raw]
+├── pitchkit/ [the framework package: one feature per file, folder per domain, co-located tests]
+│   ├── __pycache__/ [bytecode cache for the package; auto-generated, ignored]
+│   ├── calibration/ [pitch homography: broadcast px → real-world metres]
+│   │   ├── __pycache__/ [bytecode cache; auto-generated]
+│   │   ├── tests/ [calibration unit + footage tests]
+│   │   │   ├── __pycache__/ [bytecode cache; auto-generated]
+│   │   │   ├── __init__.py [marks tests/ as a package]
+│   │   │   ├── test_calibrate.py [tests the calibrate feature (TVCalib → H; DLT fallback)]
+│   │   │   ├── test_homography_from_keypoints.py [tests keypoint → homography path]
+│   │   │   ├── test_homography_lines.py [tests DLT-from-line-correspondences homography]
+│   │   │   ├── test_homography.py [tests the pure cv2 homography engine + self-verify]
+│   │   │   ├── test_keypoint_quality.py [tests keypoint quality / calibration acceptance]
+│   │   │   └── test_keypoint.py [tests pitch-landmark keypoint detection]
+│   │   ├── __init__.py [package marker]
+│   │   ├── features.py [Calibration feature (reg'd "calibrate"): TVCalib solver primary → H; DLT fallback]
+│   │   ├── homography_lines.py [DLT homography from LINE correspondences (SoccerNet/sn-calibration baseline)]
+│   │   ├── homography.py [pure cv2 pitch-homography engine: estimate, px_to_meters, warp, self-verify]
+│   │   ├── keypoint.py [pitch-landmark keypoint detection → homography point pairs (detector half of T4)]
+│   │   ├── metric.py [bridge: convert pixel tracks to metric space via a homography (feeds T4/T5/T11/T12)]
+│   │   ├── README.md [calibration domain guide]
+│   │   └── tvcalib_solver.py [TVCalib full camera solver → homography (the ACCURATE calibration path)]
+│   ├── core/ [shared contracts, no feature logic: Result, provenance, fixtures]
+│   │   ├── __pycache__/ [bytecode cache; auto-generated]
+│   │   ├── tests/ [core contract tests]
+│   │   │   ├── __pycache__/ [bytecode cache; auto-generated]
+│   │   │   ├── __init__.py [marks tests/ as a package]
+│   │   │   ├── test_fixtures.py [tests the footage test harness (loads frames / dumps artifacts)]
+│   │   │   ├── test_provenance.py [tests attach_provenance frame stamping]
+│   │   │   └── test_result.py [tests the Result success-indicator (Ok/Fail/bool)]
+│   │   ├── __init__.py [package marker]
+│   │   ├── fixtures.py [footage-driven test harness: load_sample_frames, footage_meta, dump_artifacts]
+│   │   ├── provenance.py [attach_provenance: stamp events with source_frames for traceability]
+│   │   ├── README.md [core domain guide]
+│   │   └── result.py [Result dataclass: the universal success indicator (Ok/Fail; bool() reads success)]
+│   ├── detection/ [per-frame detection — the pipeline entry point]
+│   │   ├── __pycache__/ [bytecode cache; auto-generated]
+│   │   ├── tests/ [detection unit + footage tests]
+│   │   │   ├── __pycache__/ [bytecode cache; auto-generated]
+│   │   │   ├── __init__.py [marks tests/ as a package]
+│   │   │   ├── test_detect_ball.py [tests high-recall ball detection (SAHI + specialist model)]
+│   │   │   ├── test_detect.py [tests YOLO person+ball per-frame detection (mocked + smoke)]
+│   │   │   ├── test_sahi.py [tests SAHI sliced-inference helper]
+│   │   │   └── test_vision_config.py [tests vision/ultralytics configuration handling]
+│   │   ├── __init__.py [package marker]
+│   │   ├── detect.py [YOLO person+ball per-frame detection + detect_ball_sahi (SAHI high-recall ball)]
+│   │   └── README.md [detection domain guide]
+│   ├── docs/ [in-package documentation generator]
+│   │   ├── __pycache__/ [bytecode cache; auto-generated]
+│   │   ├── tests/ [doc-generator tests]
+│   │   │   ├── __pycache__/ [bytecode cache; auto-generated]
+│   │   │   ├── __init__.py [marks tests/ as a package]
+│   │   │   └── test_docs.py [tests that FEATURES.md / the site are generated correctly]
+│   │   ├── __init__.py [package marker]
+│   │   └── build_docs.py [generates the FEATURES.md manifest + the HTML docs site]
+│   ├── events/ [possession / passes / tackles / interceptions — all frame-provenanced]
+│   │   ├── __pycache__/ [bytecode cache; auto-generated]
+│   │   ├── tests/ [events tests]
+│   │   │   ├── __pycache__/ [bytecode cache; auto-generated]
+│   │   │   ├── __init__.py [marks tests/ as a package]
+│   │   │   ├── test_events.py [tests event detection (passes/tackles) + non-empty provenance]
+│   │   │   └── test_possession_every_frame.py [tests per-frame possession assignment]
+│   │   ├── __init__.py [package marker]
+│   │   ├── events.py [detect_events(tracks, ball, teams) → Result; feature "events"]
+│   │   └── README.md [events domain guide]
+│   ├── pipeline/ [feature registry, runner, default graph, CLI]
+│   │   ├── __pycache__/ [bytecode cache; auto-generated]
+│   │   ├── tests/ [pipeline tests]
+│   │   │   ├── __pycache__/ [bytecode cache; auto-generated]
+│   │   │   ├── __init__.py [marks tests/ as a package]
+│   │   │   ├── test_default.py [tests default-graph wiring + end-to-end smoke]
+│   │   │   └── test_runner.py [tests registry / runner / compare / single-feature isolation]
+│   │   ├── __init__.py [package marker]
+│   │   ├── cli.py [CLI: \`python -m pitchkit.pipeline.cli <video> [--feature NAME] [--max-frames N]\`]
+│   │   ├── default.py [imports all features so they register; exposes run() / run_feature()]
+│   │   ├── README.md [pipeline domain guide]
+│   │   ├── registry.py [@feature decorator + global registry; registered()]
+│   │   └── runner.py [PipelineState clipboard; dep-order execution, failure flagging, run_feature, compare]
+│   ├── reliability/ [per-stat confidence — the PREDA reliability signal]
+│   │   ├── __pycache__/ [bytecode cache; auto-generated]
+│   │   ├── tests/ [reliability tests]
+│   │   │   ├── __pycache__/ [bytecode cache; auto-generated]
+│   │   │   ├── __init__.py [marks tests/ as a package]
+│   │   │   ├── test_reliability_feature.py [tests the reliability pipeline feature wrapper]
+│   │   │   └── test_reliability.py [tests compute_reliability from CV-quality signals]
+│   │   ├── __init__.py [package marker]
+│   │   ├── features.py [Reliability feature wrapper — registered into the default pipeline]
+│   │   ├── README.md [reliability domain guide]
+│   │   └── reliability.py [compute_reliability: per-stat confidence from ball/track/calib quality]
+│   ├── stats/ [per-player + per-team physical & event aggregates — terminal stage]
+│   │   ├── __pycache__/ [bytecode cache; auto-generated]
+│   │   ├── tests/ [stats tests]
+│   │   │   ├── __pycache__/ [bytecode cache; auto-generated]
+│   │   │   ├── __init__.py [marks tests/ as a package]
+│   │   │   ├── test_metric_stats.py [tests metre/km·h stats after calibration]
+│   │   │   └── test_stats.py [tests pixel distance/speed/possession aggregation on synthetic tracks]
+│   │   ├── __init__.py [package marker]
+│   │   ├── README.md [stats domain guide]
+│   │   └── stats.py [compute_stats(tracks, teams, events): distance/speed/sprints + event aggregates]
+│   ├── tactics/ [pitch control + Voronoi on the metric pitch]
+│   │   ├── __pycache__/ [bytecode cache; auto-generated]
+│   │   ├── tests/ [tactics tests]
+│   │   │   ├── __pycache__/ [bytecode cache; auto-generated]
+│   │   │   ├── __init__.py [marks tests/ as a package]
+│   │   │   ├── test_metric_and_features.py [tests metric conversion + tactics feature wrappers]
+│   │   │   ├── test_pitch_control.py [tests the Spearman pitch-control surface (synthetic)]
+│   │   │   └── test_voronoi.py [tests Voronoi dominant-region tessellation + team-area ratio]
+│   │   ├── __init__.py [package marker]
+│   │   ├── features.py [T11/T12 feature wrappers: read pixel tracks + meta H → metric → tactics]
+│   │   ├── pitch_control.py [T11 — Spearman pitch-control surface: P(team A) per pitch point]
+│   │   ├── README.md [tactics domain guide]
+│   │   └── voronoi.py [T12 — Voronoi / dominant-region territory via cKDTree rasterization]
+│   ├── tests/ [top-level package tests]
+│   │   ├── __pycache__/ [bytecode cache; auto-generated]
+│   │   └── test_report.py [tests the end-to-end report generator + CLI]
+│   ├── tracking/ [player/ball trackers, Kalman trajectory, team classifier, role filter, tracker factory]
+│   │   ├── __pycache__/ [bytecode cache; auto-generated]
+│   │   ├── tests/ [tracking tests]
+│   │   │   ├── __pycache__/ [bytecode cache; auto-generated]
+│   │   │   ├── __init__.py [marks tests/ as a package]
+│   │   │   ├── test_ball_prefers_detect_ball.py [tests that ball tracking prefers SAHI ball output]
+│   │   │   ├── test_ball_tracker.py [tests linear-interpolation ball tracking]
+│   │   │   ├── test_ball_trajectory.py [tests T6 Kalman constant-velocity trajectory]
+│   │   │   ├── test_player_tracker.py [tests ByteTrack player tracking]
+│   │   │   ├── test_role_filter.py [tests T3 referee/goalkeeper role filter (bbox heuristics)]
+│   │   │   ├── test_team_circular.py [tests T1 circular-hue team classification]
+│   │   │   ├── test_team_classifier.py [tests KMeans k=2 HSV team classification]
+│   │   │   ├── test_team_stabilizer.py [tests T2 per-track majority-vote team stabilization]
+│   │   │   └── test_tracker_factory.py [tests the ByteTrack/BoT-SORT tracker factory]
+│   │   ├── __init__.py [package marker]
+│   │   ├── ball_tracker.py [ball trajectory via linear interpolation; feature "ball"]
+│   │   ├── ball_trajectory.py [T6 constant-velocity Kalman ball trajectory (upgrade over linear)]
+│   │   ├── pitchkit_botsort.yaml [BoT-SORT config for ultralytics model.track (T9 tracker factory)]
+│   │   ├── player_tracker.py [ByteTrack player tracking over detection boxes; feature "track"]
+│   │   ├── README.md [tracking domain guide]
+│   │   ├── role_filter.py [T3 referee/goalkeeper role filter (pure bbox-centroid heuristics)]
+│   │   ├── team_classifier.py [team classification: KMeans k=2 on median HSV torso color; feature "teams"]
+│   │   └── tracker_factory.py [T9 tracker factory: ByteTrack (supervision) or BoT-SORT/OC-SORT]
+│   ├── viz/ [mplsoccer chart adapters — the dashboard chart layer]
+│   │   ├── __pycache__/ [bytecode cache; auto-generated]
+│   │   ├── tests/ [viz tests]
+│   │   │   ├── __pycache__/ [bytecode cache; auto-generated]
+│   │   │   ├── __init__.py [marks tests/ as a package]
+│   │   │   └── test_charts.py [tests the chart adapters return matplotlib Figures]
+│   │   ├── __init__.py [package marker]
+│   │   ├── charts.py [T13 mplsoccer chart adapters (heatmap, pass-network, radar) → matplotlib Figure]
+│   │   └── README.md [viz domain guide]
+│   ├── __init__.py [package root: exposes run()/run_feature() convenience API + __version__]
+│   └── report.py [end-to-end report generator + CLI: writes stats.json + reliability.json + charts]
+├── pitchkit.egg-info/ [editable-install metadata generated by setuptools (\`pip install -e .\`)]
+│   ├── dependency_links.txt [legacy setuptools dependency links (empty here)]
+│   ├── PKG-INFO [package metadata: name, version, summary, license]
+│   ├── requires.txt [declared runtime + optional dependencies ([vision]/[viz]/[dev])]
+│   ├── SOURCES.txt [list of files packaged into the distribution]
+│   └── top_level.txt [top-level importable package name(s): pitchkit]
+├── tests/ [repo-level smoke tests + sample output artifacts]
+│   ├── __pycache__/ [bytecode cache; auto-generated]
+│   ├── out/ [dumped artifacts from smoke / integration runs]
+│   │   ├── detect/ [detect-stage smoke artifacts]
+│   │   │   ├── annotated.png [annotated detection frame written by a smoke test]
+│   │   │   └── results.json [detection boxes-by-frame JSON from a smoke test]
+│   │   └── pipeline/ [full-pipeline smoke artifacts]
+│   │       └── results.json [full-pipeline run output JSON]
+│   ├── __init__.py [marks tests/ as a package]
+│   └── test_imports.py [verifies the package imports cleanly and exposes run/run_feature]
+├── .wiki_ignore [wiki staleness-ignore patterns (node_modules, __pycache__, etc.)]
+├── FEATURES.md [auto-generated feature manifest: one row per feature file]
+├── llms.txt [LLM-oriented project brief: entry points, docs map, per-domain guides]
+├── pyproject.toml [project config: metadata, dependencies, extras ([vision]/[viz]/[dev])]
+└── README.md [top-level readme: install, quickstart, layout, conventions]
+`,
+  "decisions/index.md": `# Decisions
+
+_Major decisions and direction shifts (ADRs) will be listed here._
+`,
+  "glossary.md": `---
+type: Glossary
+title: Glossary
+description: Key terms for this project.
+timestamp: "2026-07-29T17:16:52.594Z"
+---
+
+# Glossary
+
+| Term | Definition |
+|------|------------|
+| pitchkit | The standalone, copyable football video-analytics framework this project ships. Python 3.10+, MIT. |
+| PREDA | The product (statspreda.com) that pitchkit powers — broadcast-footage match analytics. |
+| Result | The universal success indicator (\`core.result\`). Every feature returns \`Result.Ok(value, **meta)\` / \`Result.Fail(error, **meta)\`; \`bool(result)\` reads success. |
+| Provenance | Frame traceability (\`core.provenance.attach_provenance\`). Stamps each event with the \`source_frames\` it came from. |
+| Feature | A single pipeline unit, one per file, registered via \`@feature(name, deps=[...])\`. |
+| PipelineState | The shared clipboard the runner threads between features; each result lands in \`state.data[name]\`. |
+| \`run\` / \`run_feature\` | Top-level API. \`run(video)\` = full default graph; \`run_feature(name, video)\` = isolate one stage. |
+| \`compare\` | Runner helper that diffs two metric snapshots for before/after analysis. |
+| DEFAULT_FEATURES | The default pipeline graph; includes \`reliability\`, so every run auto-emits per-stat confidence. |
+| SAHI | Sliced Aided Hyper Inference. N× tiled inference that lifts ball recall from ~1% (COCO) to ~98% with a specialist model. |
+| Ball recall / coverage | Fraction of frames the real ball is detected on — the key CV-quality signal feeding reliability. |
+| TVCalib | Full broadcast-camera solver (WACV23, MM4SPA/tvcalib) that yields an accurate pixel→metre homography. |
+| Homography | The 3×3 transform mapping broadcast pixels to real pitch metres (105×68 m); unlocks true-pitch stats, heatmaps, tactics. |
+| DLT | Direct Linear Transform — the line-correspondence homography fallback (SoccerNet/sn-calibration baseline). |
+| Metric space | Real-world pitch coordinates (metres) as opposed to raw pixel coordinates. |
+| ByteTrack / BoT-SORT | Multi-object trackers. ByteTrack (supervision) is default; BoT-SORT/OC-SORT (ultralytics) via the tracker factory adds CMC/ReID. |
+| ID fragmentation | A tracking failure where one player gets many IDs across pan/zoom — degrades per-player stats. |
+| Pitch control | (Tactics) Spearman-style field giving P(team A controls) at each pitch point from player reach/time-to-reach. |
+| Voronoi / dominant region | (Tactics) Tessellation of the pitch into each player's nearest territory; yields team-area ratio. |
+| Reliability signal | PREDA's product moat: an honest, automatic per-stat confidence derived from measurable CV-quality (ball coverage, tracking stability, interpolation ratio, calibration confidence). |
+| Footage-driven test | A feature's co-located test that runs on \`football-1.mp4\`, asserts \`Result.ok\`, and dumps artifacts to \`tests/out/<feature>/\`. |
+| \`[vision]\` / \`[viz]\` / \`[dev]\` | Optional extras in \`pyproject.toml\`: vision = ultralytics+supervision; viz = matplotlib+mplsoccer; dev = pytest. |
+| OKF | The knowledge-wiki bundle format this \`docs/wiki/\` follows (concepts, decisions, rules, learnings, preferences). |
+`,
+  "index.md": `---
+okf_version: "0.1"
+---
+
+# Project Knowledge Wiki
+
+<!-- wiki-nav:start -->
+## Navigation map
+
+Auto-generated detailed index of every docs/wiki/ concept — the map the LLM uses to locate information. 4 concept(s). Regenerated on init and on wiki_mark_synced. Generated 2026-07-29T17:16:57.147Z.
+
+Each entry: \`concept-id\` (pass to wiki_get) — title — description.
+
+### Core concepts
+
+- \`glossary\` — Glossary — Key terms for this project.
+- \`overview\` — Overview — What this project contains and its structure.
+
+### Architecture
+
+- \`architecture/file-tree\` — architecture/file-tree
+
+### Pages
+
+- \`pages/TEMPLATES\` — Page Templates — Reference templates for Concept, Entity, and Artifact pages. Follow these when using wiki_note_page.
+<!-- wiki-nav:end -->
+
+An [OKF](https://github.com/earendil-works/okf) bundle documenting this project.
+
+- [Overview](./overview.md) — What this project contains and its structure
+- [File tree](./architecture/file-tree.md) — Complete project file listing
+- [Glossary](./glossary.md) — Key terms for this project
+- [Decisions](./decisions/) — Major decisions and direction shifts (ADRs)
+- [Rules](./rules/) — Reusable heuristics, guidelines, and conventions
+- [Pages](./pages/) — Concepts, entities, and artifacts of this project
+- [Learnings](./learnings/) — Captured learnings and insights
+- [Preferences](./preferences/) — Captured preferences and conventions
+`,
+  "learnings/index.md": `# Learnings
+
+_Captured learnings will be listed here._
+`,
+  "overview.md": `---
+type: System Overview
+title: Overview
+description: What this project contains and its structure.
+timestamp: "2026-07-29T17:16:52.594Z"
+---
+
+# Overview
+
+**pitchkit** is a standalone, copyable football video-analytics framework written in Python
+(3.10+). Broadcast video goes in; player and ball detection, multi-object tracking, pitch
+calibration, event detection, physical and tactical stats, a per-stat reliability signal, and
+charts come out. It is the engine of **PREDA** (statspreda.com) — a product that turns
+broadcast footage into trustworthy match analytics. The original Telegram-bot prototype lives
+untouched in a sibling \`src/\`; pitchkit is a separate, self-contained package you can either
+\`pip install -e .\` or copy folder-for-folder into another project (no repo-specific imports).
+
+The project is organized around three invariants, enforced everywhere: **one distinct feature
+per file**, grouped into a **folder per domain** (\`core\`, \`detection\`, \`tracking\`,
+\`calibration\`, \`events\`, \`stats\`, \`tactics\`, \`reliability\`, \`viz\`, \`pipeline\`); **every feature
+returns a \`core.result.Result\`** success-indicator so \`bool(result)\` reads success and a failing
+stage is *flagged, never crashed*; and **every event carries frame provenance** via
+\`core.provenance\`, so any pass/tackle/interception traces back to the exact footage frame. Each
+feature file also has a co-located **footage-driven test** that runs on the canonical clip
+\`football-1.mp4\` and dumps inspectable artifacts under \`tests/out/<feature>/\`.
+
+Execution is a **dependency-ordered pipeline runner** (\`pitchkit/pipeline/\`). Features register
+with \`@feature(name, deps=[...])\`; the runner topologically orders them, threads a shared
+\`PipelineState\` clipboard, collects each \`Result\`, and isolates failures so the whole run still
+completes. \`pitchkit.run(video)\` runs the default graph end-to-end; \`pitchkit.run_feature(name,
+video)\` isolates a single stage; \`compare(baseline, current)\` diffs metric snapshots for
+before/after analysis. The top-level API is the thin re-export in \`pitchkit/__init__.py\`.
+
+The repository root mixes four concerns: the **\`pitchkit/\` package** itself (41 source modules +
+their tests), **\`docs/\`** (a from-scratch build guide, a development log, a raw session
+transcript, a generated self-contained HTML site, and this OKF knowledge wiki), **\`tests/\`**
+(repo-level smoke tests plus sample output artifacts), and **project metadata** (\`pyproject.toml\`,
+the editable-install \`pitchkit.egg-info/\`, \`FEATURES.md\` auto-manifest, \`llms.txt\` LLM brief,
+and \`README.md\`). High-recall ball detection (SAHI + a specialist model, ~98% vs ~1% for COCO)
+and accurate metric calibration (the TVCalib full camera solver → real metres) are opt-in via
+\`meta\` knobs; without them the pipeline degrades gracefully (pixels instead of metres, standard
+YOLO ball). The full suite is \`python -m pytest pitchkit -q\` → 121 tests.
+`,
+  "pages/artifacts/index.md": `# Artifacts
+
+_Documents, diagrams, and deliverables will be listed here._
+`,
+  "pages/concepts/index.md": `# Concepts
+
+_Abstract ideas and definitions will be listed here._
+`,
+  "pages/entities/index.md": `# Entities
+
+_Concrete named things will be listed here._
+`,
+  "pages/index.md": `# Pages
+
+Knowledge graph: concepts, entities, and artifacts that make up this project.
+
+- [Concepts](./concepts/) — Abstract ideas, definitions, and categories
+- [Entities](./entities/) — Concrete named things, systems, tools, and records
+- [Artifacts](./artifacts/) — Documents, diagrams, code files, and deliverables
+`,
+  "pages/TEMPLATES.md": `---
+type: Concept
+title: Page Templates
+description: Reference templates for Concept, Entity, and Artifact pages. Follow these when using wiki_note_page.
+timestamp: 2026-07-29T17:16:52.594Z
+---
+# Page Templates
+
+Use these when documenting the projectbase with \`wiki_note_page\`. Each type has
+a stable structure so pages are consistent, skimmable, and well-linked.
+
+## Concept (abstract ideas, definitions, patterns, categories)
+
+\`\`\`markdown
+## What is it?
+[One paragraph — clear definition the team can agree on.]
+
+## Why does it matter?
+[What problem it solves, what depends on it, or what would break without it.]
+
+## Key rules / properties
+- [Characteristic or invariant]
+- [Edge case to watch for]
+
+## Relationships
+- [[entity-that-implements-this]] — how
+- [[related-concept]] — how
+
+## Source
+- \\\`path/to/file.ts\\\` — implements or references this concept
+\`\`\`
+
+## Entity (concrete named things: endpoints, services, models, tools)
+
+\`\`\`markdown
+## What is it?
+[Concrete thing — what it IS, where it lives.]
+
+## Why does it matter?
+[Its role in the system, who/what depends on it.]
+
+## Details
+- **Location**: \\\`path/to/file\\\`
+- **Interface / Schema**: [key fields, methods, routes, or shape]
+- **Configuration**: [env vars, flags, settings]
+
+## Relationships
+- [[concept-it-implements]] — what abstract idea this instantiates
+- [[entity-it-depends-on]] — dependency or peer
+
+## Lifecycle
+- First added: [when, why]
+- Significant changes: [date — what changed]
+\`\`\`
+
+## Artifact (deliverables: diagrams, reports, specs, configs, screenshots)
+
+\`\`\`markdown
+## What is it?
+[Document, diagram, report, or file — what it contains.]
+
+## What it documents
+- [[entity-or-concept]] — what this artifact describes or supports
+
+## Details
+- **Format**: [diagram type, file format, tool used]
+- **Location**: \\\`path/to/file\\\`
+
+## Source
+- Generated from: [what data, process, or session produced it]
+\`\`\`
+`,
+  "preferences/index.md": `# Preferences
+
+_Captured preferences will be listed here._
+`,
+  "rules/index.md": `# Rules
+
+_Reusable heuristics, guidelines, and conventions will be listed here._
+`,
+};
+var WIKI_PAGES = [
+    { path: "index.md", label: "Project Knowledge Wiki", group: "" },
+    { path: "glossary.md", label: "Glossary", group: "" },
+    { path: "overview.md", label: "Overview", group: "" },
+    { path: "architecture/file-tree.md", label: "File tree", group: "Architecture" },
+    { path: "decisions/index.md", label: "Decisions", group: "Decisions" },
+    { path: "learnings/index.md", label: "Learnings", group: "Learnings" },
+    { path: "pages/TEMPLATES.md", label: "Page Templates", group: "Pages" },
+    { path: "pages/index.md", label: "Pages", group: "Pages" },
+    { path: "pages/artifacts/index.md", label: "Artifacts", group: "Pages / Artifacts" },
+    { path: "pages/concepts/index.md", label: "Concepts", group: "Pages / Concepts" },
+    { path: "pages/entities/index.md", label: "Entities", group: "Pages / Entities" },
+    { path: "preferences/index.md", label: "Preferences", group: "Preferences" },
+    { path: "rules/index.md", label: "Rules", group: "Rules" }
+];
+(function(){
+var a=document.getElementById("hljs-light"),d=document.getElementById("hljs-dark"),t=document.getElementById("themeToggle"),i=document.getElementById("themeIcon");
+function g(){try{return localStorage.getItem("mdv-theme")||"auto"}catch(e){return"auto"}}
+function l(o){var h=document.documentElement;h.setAttribute("data-theme",o);var k=o==="dark"||(o==="auto"&&window.matchMedia("(prefers-color-scheme: dark)").matches);h.classList.toggle("system-dark",o==="auto"&&window.matchMedia("(prefers-color-scheme: dark)").matches);a.disabled=k;d.disabled=!k;i.innerHTML=k?'<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>':'<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';t.title=k?"Switch to light mode":"Switch to dark mode"}
+l(g());t.addEventListener("click",function(){var o=g(),h=o==="auto"?"light":o==="light"?"dark":"auto";try{localStorage.setItem("mdv-theme",h)}catch(e){}l(h)});window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change",function(){if(g()==="auto")l("auto")});
+var s=document.getElementById("sidebar"),sc=document.getElementById("sidebarScroll"),o=document.getElementById("output"),fn=document.getElementById("fileName"),bc=document.getElementById("breadcrumbCurrent"),bh=document.getElementById("breadcrumbHome"),bb=document.getElementById("backBtn"),fb=document.getElementById("fwdBtn"),hm=document.getElementById("homeBtn"),st=document.getElementById("sidebarToggle"),cs=document.getElementById("closeSidebarBtn"),cp="index.md",hs=[],hi=-1;
+function es(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}
+function at(s){return String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/'/g,"&#39;")}
+function rl(fp,ln){if(/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(ln))return null;if(ln.startsWith("#"))return null;var d=fp.lastIndexOf("/"),r=d>=0?fp.substring(0,d)+"/"+ln:ln;r=r.replace(/^\.\//,"");if(r.endsWith("/"))r+="index.md";if(!r.endsWith(".md"))r+="/index.md";r=r.replace(/\/\//g,"/");var p=r.split("/"),o=[];for(var i=0;i<p.length;i++){if(p[i]===".")continue;if(p[i]===".."&&o.length>0)o.pop();else if(p[i]!=="")o.push(p[i])}return o.join("/")}
+function fm(p){return WIKI_CONTENT[p]?Promise.resolve(WIKI_CONTENT[p]):Promise.reject(new Error('Page "'+p+'" not found'))}
+function rm(t,p){var c=t.replace(/^---[\s\S]*?---\s*/,""),h;if(typeof marked!=="undefined"){marked.setOptions({gfm:true,breaks:false});h=marked.parse(c)}else{h="<pre>"+es(c)+"</pre>"}o.innerHTML=h;if(typeof hljs!=="undefined"){o.querySelectorAll("pre code").forEach(function(b){hljs.highlightElement(b)})}o.querySelectorAll("a").forEach(function(a){var h=a.getAttribute("href");if(!h)return;if(/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(h)){a.setAttribute("target","_blank");a.setAttribute("rel","noopener noreferrer");return}if(h.startsWith("#")){a.addEventListener("click",function(e){e.preventDefault();var el=document.getElementById(h.substring(1));if(el)el.scrollIntoView({behavior:"smooth"})});return}a.addEventListener("click",function(e){e.preventDefault();var r=rl(p,h);if(r)nn(r)})});var h1=o.querySelector("h1");return h1?h1.textContent:p.replace(/\.md$/,"").split("/").pop()}
+function nn(p,ph){if(ph===undefined)ph=true;p=p.replace(/^\.\//,"");if(p.endsWith("/"))p+="index.md";if(!p.endsWith(".md"))p+="/index.md";var pp=cp;cp=p;us(p);o.innerHTML='<div class="loading-state"><div class="spinner"></div><p>Loading '+es(p)+'...</p></div>';fm(p).then(function(t){var ti=rm(t,p);fn.textContent=ti;bc.textContent=ti;if(ph){hs=hs.slice(0,hi+1);hs.push(p);hi=hs.length-1;ub();try{window.history.pushState({path:p},"","#"+p)}catch(e){}}}).catch(function(e){o.innerHTML='<div class="error-banner">Could not load <strong>'+es(p)+"</strong>: "+es(e.message)+"</div>";fn.textContent="Error";bc.textContent="Error loading page";cp=pp;us(cp)})}
+function us(p){sc.querySelectorAll(".tree-item").forEach(function(b){b.classList.toggle("active",b.getAttribute("data-path")===p)})}
+function ub(){bb.disabled=hi<=0;fb.disabled=hi>=hs.length-1}
+function gb(){if(hi>0){hi--;nn(hs[hi],false);ub();try{window.history.replaceState({path:hs[hi]},"","#"+hs[hi])}catch(e){}}}
+function gf(){if(hi<hs.length-1){hi++;nn(hs[hi],false);ub();try{window.history.replaceState({path:hs[hi]},"","#"+hs[hi])}catch(e){}}}
+function gh(){nn("index.md")}
+function bt(){var g={};WIKI_PAGES.forEach(function(p){var gr=p.group||"";if(!g[gr])g[gr]=[];g[gr].push(p)});var gn=Object.keys(g).sort(function(a,b){if(a===""||a==="Architecture")return -1;if(b===""||b==="Architecture")return 1;return a.localeCompare(b)});var h="";gn.forEach(function(gr){if(gr)h+='<div class="tree-group-label">'+es(gr)+"</div>";g[gr].forEach(function(p){h+='<button class="tree-item'+(p.path===cp?" active":"")+'" data-path="'+at(p.path)+'"><svg class="tree-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span class="tree-label">'+es(p.label)+"</span></button>"})});sc.innerHTML=h;sc.querySelectorAll(".tree-item").forEach(function(b){b.addEventListener("click",function(){nn(b.getAttribute("data-path"));if(window.innerWidth<=768)s.classList.remove("show-mobile")})})}
+bb.addEventListener("click",gb);fb.addEventListener("click",gf);hm.addEventListener("click",gh);bh.addEventListener("click",gh);st.addEventListener("click",function(){if(window.innerWidth<=768){s.classList.toggle("show-mobile")}else{s.style.display=s.style.display==="none"?"flex":"none"}});cs.addEventListener("click",function(){s.style.display="none"});window.addEventListener("popstate",function(e){if(e.state&&e.state.path){var idx=hs.indexOf(e.state.path);if(idx>=0){hi=idx;nn(e.state.path,false);ub()}else{nn(e.state.path)}}});
+bt();var ip="index.md";if(window.location.hash){var hp=window.location.hash.substring(1);if(hp.endsWith(".md")||hp.endsWith("/")){ip=hp.replace(/^\.\//,"");if(ip.endsWith("/"))ip+="index.md"}}nn(ip,true);
+})();
+  </script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+# pitchkit
+
+> pitchkit is a standalone, copyable football video-analytics framework (Python 3.10+):
+> broadcast video → player/ball detection, tracking, pitch calibration, events, physical and
+> tactical stats, a per-stat reliability signal, and charts. Every feature returns a `Result`
+> success-indicator, every event carries frame provenance, and each file has a co-located
+> footage-driven test. It is the engine of PREDA (statspreda.com).
+
+pitchkit is a self-contained package separate from the original `src/` prototype (preserved
+untouched as the reference implementation). One feature per file, folder per domain, a
+dependency-ordered pipeline runner with single-feature isolation, and a graceful-failure model
+(a failing feature is flagged, never crashes the run).
+
+Key entry points:
+- `pitchkit.run(video, meta=...)` / `pitchkit.run_feature(name, video)` — full pipeline or one stage
+- `python -m pitchkit.report <video>` — one-command report (`stats.json` + `reliability.json` + charts)
+- `python -m pytest pitchkit -q` — 121 tests
+
+High-recall ball detection (SAHI + a specialist football-ball model ≈ 98% vs ~1% for COCO) is
+opt-in via `meta["ball_model_path"]`; accurate metric calibration (TVCalib full camera solver)
+via `meta["calib_checkpoint"]` + `meta["tvcalib_path"]` — without these, the pipeline degrades
+gracefully (pixels instead of metres; standard YOLO ball).
+
+## Docs
+
+- [README](README.md): Install, quickstart, layout, conventions.
+- [Development log](docs/DEVELOPMENT_LOG.md): How the framework was built — phases, measured quality wins, decisions, and bugfixes (the calibration deep-dive is the most instructive).
+- [Build-from-scratch guide](docs/BUILD_FROM_SCRATCH.md): Ordered, TDD-locked todos to reproduce the exact framework (target: 121 tests green).
+- [Feature manifest](FEATURES.md): Auto-generated one-line summary of every feature file.
+- [HTML docs site](docs/site/index.html): Self-contained reference (sidebar nav, search, per-feature quality cards).
+
+## Per-domain guides
+
+- [core](pitchkit/core/README.md): `Result` success-indicator, frame provenance, footage test harness.
+- [detection](pitchkit/detection/README.md): YOLO detection + the validated high-recall `detect_ball` (SAHI).
+- [tracking](pitchkit/tracking/README.md): player/ball trackers, Kalman trajectory, team classifier (circular hue), role filter, tracker factory.
+- [calibration](pitchkit/calibration/README.md): homography engine, keypoints, TVCalib solver → metres.
+- [events](pitchkit/events/README.md): possession/passes/tackles, every event frame-provenanced.
+- [stats](pitchkit/stats/README.md): physical + aggregate stats (pixels + metres).
+- [tactics](pitchkit/tactics/README.md): pitch control + Voronoi (activate when calibrated).
+- [reliability](pitchkit/reliability/README.md): per-stat confidence (the PREDA signal).
+- [viz](pitchkit/viz/README.md): mplsoccer chart adapters.
+- [pipeline](pitchkit/pipeline/README.md): registry, runner (isolation + downstream + compare), default graph, CLI.
+
+## Optional
+
+- [Session transcript](docs/SESSION_TRANSCRIPT.jsonl): Verbatim turn-by-turn log of the build session (large, raw JSONL).
+- [Project knowledge wiki](../docs/wiki/index.md): OKF wiki — decisions (ADRs), rules, learnings, preferences.
