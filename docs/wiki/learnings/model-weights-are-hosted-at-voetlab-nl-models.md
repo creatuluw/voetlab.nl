@@ -32,8 +32,10 @@ for f in yolov8s.pt martinjolif_ball.pt tvcalib_calib_train59.pt; do
 done
 ```
 
-> ⚠️ When this was verified, the served `tvcalib_calib_train59.pt` was ~543 KB smaller than
-> the local copy — possibly a truncated FTP upload. Re-upload if `torch.load` fails on it.
+> ✅ Byte-size-verified against the local source copies (4 exact). The calibration checkpoint
+> source is `488,774,369` bytes and `models/tvcalib_calib_train59.pt` is byte-identical to it
+> (sha256-confirmed); the server serves the same size, so it is the complete file. (An earlier
+> "~543 KB short" alarm was a bad expected-value in the check, not a real truncation.)
 
 ## Why voetlab.nl and NOT te9.dev
 
