@@ -89,8 +89,16 @@ def annotate(frame, boxes: list[dict], player_color=(0, 255, 0)):
 
 
 def _run_sahi(video, *, model_path, conf, classes, max_frames=None, slice_size=640, frames=None,
-               progress: Optional[Callable[[dict], None]] = None):
-    """Sliced (SAHI) inference for small-object recall — per frame. ``frames`` is injectable for tests."""
+               progress: Optional[Callable[[dict], None]] = None, stage: str = "detect",
+               throttle_every: int = 1):
+    """Sliced (SAHI) inference for small-object recall — per frame.
+
+    ``frames`` is injectable for tests. ``progress`` emits per-frame events keyed by ``stage``
+    (default "detect" every frame, matching detect()). For the high-recall ball stage pass
+    ``stage="detect_ball", throttle_every=20``: emits every ~20 frames plus a guaranteed final
+    emit so the UI bar completes. ``throttle_every == 1`` keeps the every-frame detect() path
+    byte-identical (no extra final emit).
+    """
     import cv2
     from sahi import AutoDetectionModel
     from sahi.predict import get_sliced_prediction
@@ -131,26 +139,38 @@ def _run_sahi(video, *, model_path, conf, classes, max_frames=None, slice_size=6
                 boxes.append({"x1": float(x1), "y1": float(y1), "x2": float(x2), "y2": float(y2),
                               "class": cid, "confidence": round(float(pred.score.value), 3)})
         out[i] = boxes
-        if progress:
-            progress({"type": "frame", "stage": "detect", "currentFrame": i, "totalFrames": total})
+        if progress and i % throttle_every == 0:
+            progress({"type": "frame", "stage": stage, "currentFrame": i, "totalFrames": total})
         if max_frames and i >= max_frames:
             break
+    # guaranteed final emit so the UI progress bar completes (harmless dup if a throttle landed here)
+    if progress and throttle_every > 1 and i:
+        progress({"type": "frame", "stage": stage, "currentFrame": i, "totalFrames": total})
     if cap is not None:
         cap.release()
     return out
 
 
-def detect_ball_sahi(video, ball_model_path, *, ball_class: int = 0, conf: float = 0.15,
-                        slice_size: int = 512, max_frames=None, frames=None) -> Result:
+def detect_ball_sahi(video, ball_model_path, *, ball_class: int = 0, conf: float = 0.10,
+                        slice_size: int = 768, max_frames=None, frames=None,
+                        progress: Optional[Callable[[dict], None]] = None) -> Result:
     """High-recall ball detection: SAHI sliced inference with a football-ball specialist model.
 
-    VALIDATED on football-1.mp4: 96% ball-frame coverage vs 1% for COCO class 32 (see wiki
-    learning). Boxes are normalized to ``class=BALL (32)`` so the rest of the pipeline
-    (ball_tracker filters class==32) consumes them unchanged.
+    VALIDATED on football-1.mp4 (1920x1080): ~98% ball-frame coverage vs ~1% for COCO class 32.
+    Defaults ``slice_size=768, conf=0.10``: a 1080p frame slices into 6 patches (was 15 at
+    512), ~1.8x faster, recall held at ~98% on a 40-frame sample (see wiki learning). Boxes
+    are normalized to ``class=BALL (32)`` so the rest of the pipeline (ball_tracker filters
+    class==32) consumes them unchanged. ``progress`` mirrors detect()'s per-frame callback;
+    detect_ball throttles it to every ~20 frames + a final emit so the web UI bar advances.
     """
+    # ponytail: slice_size=768 -> 6 slices on 1080p (3x2), the recall-preserving floor.
+    # Ceiling: slice_size>=1280 collapses to 2 slices and ball recall falls to ~50% (the ball
+    # becomes too small per patch); conf must stay <=0.10 to hold recall once slices grow
+    # (0.15 loses ~8-15%). Raise slice_size past 960 only after re-measuring recall.
     try:
         raw = _run_sahi(video, model_path=ball_model_path, conf=conf, classes=[ball_class],
-                        max_frames=max_frames, slice_size=slice_size, frames=frames)
+                        max_frames=max_frames, slice_size=slice_size, frames=frames,
+                        progress=progress, stage="detect_ball", throttle_every=20)
     except Exception as exc:
         return Result.Fail(f"ball SAHI failed: {exc}", feature="detect_ball")
     out = {f: [{**b, "class": BALL} for b in bxs] for f, bxs in raw.items()}
@@ -168,8 +188,8 @@ def _detect_ball_feature(state) -> Result:
     if not path:
         return Result.Fail("detect_ball needs meta['ball_model_path']", feature="detect_ball")
     return detect_ball_sahi(state.footage, path, ball_class=meta.get("ball_class", 0),
-                            conf=meta.get("conf", 0.15), slice_size=meta.get("slice_size", 512),
-                            max_frames=meta.get("max_frames"))
+                            conf=meta.get("conf", 0.10), slice_size=meta.get("slice_size", 768),
+                            max_frames=meta.get("max_frames"), progress=state.progress)
 
 
 def detect(
