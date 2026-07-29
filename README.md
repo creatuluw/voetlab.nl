@@ -46,7 +46,7 @@ for accurate metric calibration.
 ## Models & weights
 
 The framework needs model weights that are **not bundled in git** (they're large binaries).
-Download them from the canonical host **https://te9.dev/voetlab/models/** into a `models/`
+Download them from the canonical host **https://voetlab.nl/models/** into a `models/`
 folder, then point the runtime at them via `meta`:
 
 | File | Runtime key | Purpose |
@@ -58,7 +58,7 @@ folder, then point the runtime at them via `meta`:
 ```bash
 mkdir -p models
 for f in yolov8s.pt martinjolif_ball.pt tvcalib_calib_train59.pt; do
-  curl -L -o "models/$f" "https://te9.dev/voetlab/models/$f"
+  curl -L -o "models/$f" "https://voetlab.nl/models/$f"
 done
 ```
 

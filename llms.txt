@@ -23,7 +23,7 @@ gracefully (pixels instead of metres; standard YOLO ball).
 ## Model weights
 
 Model weights are NOT bundled in git (large binaries). Fetch them from the canonical host
-**https://te9.dev/voetlab/models/** into a local `models/` dir and pass the paths via `meta`:
+**https://voetlab.nl/models/** into a local `models/` dir and pass the paths via `meta`:
 
 - `yolov8s.pt` → `meta["model_path"]` — default YOLO detector (persons + ball)
 - `martinjolif_ball.pt` → `meta["ball_model_path"]` — SAHI football-ball model (~98% recall)
@@ -32,7 +32,7 @@ Model weights are NOT bundled in git (large binaries). Fetch them from the canon
 
 ```bash
 for f in yolov8s.pt martinjolif_ball.pt tvcalib_calib_train59.pt; do
-  curl -L -o "models/$f" "https://te9.dev/voetlab/models/$f"
+  curl -L -o "models/$f" "https://voetlab.nl/models/$f"
 done
 ```
 
