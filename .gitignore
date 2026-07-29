@@ -20,6 +20,10 @@ tests/out/
 .idea/
 .vscode/
 
+# Consolidated model weights — distributed via FTP, not git (large binaries).
+# Only models/README.md is tracked; the .pt files are FTP assets.
+/models/*.pt
+
 # Oversized vendored asset — exceeds GitHub's 100 MB file limit.
 # Calibration checkpoint referenced by meta["calib_checkpoint"]; download separately
 # (see docs/BUILD_FROM_SCRATCH.md Phase 14).
