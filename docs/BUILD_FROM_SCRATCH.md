@@ -236,7 +236,7 @@ Only needed to make `calibrate` produce real metres (otherwise it fails graceful
   https://tib.eu/cloud/s/x68XnTcZmsY4Jpg/download/train_59.pt -o
   external/tvcalib/data/segment_localization/train_59.pt`.
 - `pip install kornia soccernet pytorch-lightning`.
-- **Three compat shims** in the vendored research code (predates torch 2.x / cv2 4.x):
+- **Three compat shims** in the vendored research code (older than torch 2.x / cv2 4.x):
   1. `tvcalib/sncalib_dataset.py`: `from torch._six import string_classes` → fallback
      `string_classes = (str, bytes)`.
   2. `tvcalib/inference.py`: `torch.load(checkpoint)` → `torch.load(checkpoint,
