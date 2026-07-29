@@ -1,6 +1,6 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>pitchkit — framework docs</title>
+<title>voetlab — framework docs</title>
 <style>
 :root{--bg:#0f1115;--fg:#e7e9ee;--muted:#9aa3b2;--accent:#36f;--card:#161922;--bd:#262b36}
 @media (prefers-color-scheme: light){:root{--bg:#fafafa;--fg:#161922;--muted:#5b6472;--accent:#14f;--card:#fff;--bd:#e3e6ee}}
@@ -24,7 +24,7 @@ code{background:var(--card);border:1px solid var(--bd);padding:1px 5px;border-ra
 </style></head><body>
 <div class="toolbar"><button onclick="window.print()">Print</button></div>
 <div class="layout"><aside>
-<h1>pitchkit</h1>
+<h1>voetlab</h1>
 <input id="search" placeholder="filter features..." oninput="filterCards()">
 <details class="nav-group" open><summary>core</summary><a href="#core-fixtures.py">fixtures.py</a><a href="#core-provenance.py">provenance.py</a><a href="#core-result.py">result.py</a></details>
 <details class="nav-group" open><summary>detection</summary><a href="#detection-detect.py">detect.py</a></details>
@@ -37,17 +37,17 @@ code{background:var(--card);border:1px solid var(--bd);padding:1px 5px;border-ra
 <details class="nav-group" open><summary>viz</summary><a href="#viz-charts.py">charts.py</a></details>
 <details class="nav-group" open><summary>pipeline</summary><a href="#pipeline-cli.py">cli.py</a><a href="#pipeline-default.py">default.py</a><a href="#pipeline-registry.py">registry.py</a><a href="#pipeline-runner.py">runner.py</a></details>
 </aside><main>
-<header><h1>pitchkit &mdash; standalone football video-analytics framework</h1>
+<header><h1>voetlab &mdash; standalone football video-analytics framework</h1>
 <div class="meta">Video &rarr; tracking, events, physical/tactical stats, viz. 28 feature files. Self-contained &amp; copyable.</div>
 <div class="pipe"><span>detect</span>&rarr;<span>track</span>&rarr;<span>ball</span>&rarr;<span>teams</span>&rarr;<span>events</span>&rarr;<span>stats</span></div>
-<pre>from pitchkit.pipeline.default import run, run_feature
+<pre>from voetlab.pipeline.default import run, run_feature
 res = run("football-1.mp4", max_frames=50)         # full pipeline
 res.value["data"]["stats"]; res.value["failed"]    # outputs + any failures
 run_feature("detect", "football-1.mp4")            # isolate one stage</pre>
 </header>
 <section class="card" id="core-fixtures.py"><h2>core/<span>fixtures.py</span></h2><p class="summary">Footage-driven test harness + artifact dumping.</p><details><summary>Quality &amp; when to use</summary><pre>(see source)</pre></details></section>
 <section class="card" id="core-provenance.py"><h2>core/<span>provenance.py</span></h2><p class="summary">Provenance — trace every event back to the frame(s) it was captured from.</p><details><summary>Quality &amp; when to use</summary><pre>(see source)</pre></details></section>
-<section class="card" id="core-result.py"><h2>core/<span>result.py</span></h2><p class="summary">Result — the universal success indicator for every pitchkit feature.</p><details><summary>Quality &amp; when to use</summary><pre>(see source)</pre></details></section>
+<section class="card" id="core-result.py"><h2>core/<span>result.py</span></h2><p class="summary">Result — the universal success indicator for every voetlab feature.</p><details><summary>Quality &amp; when to use</summary><pre>(see source)</pre></details></section>
 <section class="card" id="detection-detect.py"><h2>detection/<span>detect.py</span></h2><p class="summary">P1 — per-frame detection (persons + ball) via YOLO.</p><details><summary>Quality &amp; when to use</summary><pre>What:  detect() runs YOLO per-frame; boxes_from_result() parses; annotate() draws.
 Does:  emits per-frame person + ball boxes (feature "detect"); the pipeline entry point.
 GOOD:  person detection (COCO class 0) — high recall on broadcast footage.
@@ -135,7 +135,7 @@ When:  once you have metric (x, y) positions per player (calibration applied).
 <section class="card" id="reliability-features.py"><h2>reliability/<span>features.py</span></h2><p class="summary">Reliability feature — per-stat confidence from ball/track quality signals.</p><details><summary>Quality &amp; when to use</summary><pre>(see source)</pre></details></section>
 <section class="card" id="reliability-reliability.py"><h2>reliability/<span>reliability.py</span></h2><p class="summary">T10 — reliability signal: an honest per-stat confidence from measurable CV-quality signals.</p><details><summary>Quality &amp; when to use</summary><pre>(see source)</pre></details></section>
 <section class="card" id="viz-charts.py"><h2>viz/<span>charts.py</span></h2><p class="summary">T13 — mplsoccer chart adapters (dashboard chart engine).</p><details><summary>Quality &amp; when to use</summary><pre>(see source)</pre></details></section>
-<section class="card" id="pipeline-cli.py"><h2>pipeline/<span>cli.py</span></h2><p class="summary">CLI: ``python -m pitchkit.pipeline.cli &lt;video&gt; [--feature NAME] [--max-frames N]``.</p><details><summary>Quality &amp; when to use</summary><pre>(see source)</pre></details></section>
+<section class="card" id="pipeline-cli.py"><h2>pipeline/<span>cli.py</span></h2><p class="summary">CLI: ``python -m voetlab.pipeline.cli &lt;video&gt; [--feature NAME] [--max-frames N]``.</p><details><summary>Quality &amp; when to use</summary><pre>(see source)</pre></details></section>
 <section class="card" id="pipeline-default.py"><h2>pipeline/<span>default.py</span></h2><p class="summary">P7 — default pipeline wiring + single-feature isolation.</p><details><summary>Quality &amp; when to use</summary><pre>(see source)</pre></details></section>
 <section class="card" id="pipeline-registry.py"><h2>pipeline/<span>registry.py</span></h2><p class="summary">Feature registry.</p><details><summary>Quality &amp; when to use</summary><pre>(see source)</pre></details></section>
 <section class="card" id="pipeline-runner.py"><h2>pipeline/<span>runner.py</span></h2><p class="summary">Pipeline runner: dependency-order execution with shared state, failure flagging,</p><details><summary>Quality &amp; when to use</summary><pre>(see source)</pre></details></section>

@@ -1,22 +1,21 @@
-# pitchkit — Development Log
+# voetlab — Development Log
 
-> A dev-facing record of how `pitchkit` went from the original `mult-agents-football-match-analyzer`
-> prototype to a standalone, tested, broadcast-football analytics framework. Read this to
+> A dev-facing record of how `voetlab` was built into a standalone, tested,
+> broadcast-football analytics framework. Read this to
 > understand *why* the code is shaped the way it is, *what* was measured, and *where* the
 > remaining knobs are.
 
 **Status at end of session:** 121 tests green · standalone + `pip install -e` · full pipeline
 (detect→track→ball→teams→events→stats) with high ball recall, accurate metric calibration,
-auto reliability signal, and a one-command report generator. `src/` (the original engine) is
-preserved untouched as the reference implementation.
+auto reliability signal, and a one-command report generator.
 
 ---
 
 ## 1. Starting point & goal
 
-The repo was a single-user **Telegram bot + CLI** (`src/agents/...`, `run_pipeline.py`) that
-ran YOLOv8s + ByteTrack → HSV team split → rule-based events → Groq report. The owner
-positioned it as **v1 of PREDA** (statspreda.com — *"Elite football data, from any broadcast"*).
+The project began as a single-user **bot + CLI** that ran YOLOv8s + ByteTrack → HSV team
+split → rule-based events → an automated report. It was positioned as **v1 of voetlab**
+(voetlab.nl — *"Elite football data, from any broadcast"*).
 
 Two problems framed all the work:
 1. **Quality was poor.** Ball detection was ~1–18% of frames; events depend on the ball, so
@@ -25,7 +24,7 @@ Two problems framed all the work:
 2. **It wasn't a reusable framework.** Logic was coupled in agents; no tests; no way to run
    or inspect a single stage.
 
-The goal became: turn the engine into a **standalone, copyable, testable framework** (`pitchkit`)
+The goal became: turn the engine into a **standalone, copyable, testable framework** (`voetlab`)
 and lift quality to physically-meanful (metres, real events) using verified, online-checked
 techniques — without a web app (explicitly deferred).
 
@@ -35,8 +34,7 @@ techniques — without a web app (explicitly deferred).
 
 The websearch backend returned empty all session, so research was done by **deep-fetching
 primary sources** (official docs / papers / repo READMEs via `curl`) and parallel research
-scouts. Findings live in `research_preda_v1_gaps/`, `research_repos_features/`,
-`research_remaining_impl/`, `research_tvcalib_shape_bug/`, and `research_repos_features/`.
+scouts. Findings live in local research notes (not shipped with this repo).
 
 **Catalogued 20+ high-star repos** across tracking, events, calibration, viz, and end-to-end
 pipelines (mplsoccer, SoccerNet, LaurieOnTracking, socceraction, supervision, ByteTrack/
@@ -63,9 +61,9 @@ hosted inference is a poor fit (~100–190k frames/match). Hugging Face has free
 
 ---
 
-## 3. Architecture: the `pitchkit` framework
+## 3. Architecture: the `voetlab` framework
 
-A set of conventions (recorded as the wiki rule `pitchkit-framework-conventions-...`) govern
+A set of conventions (recorded as the wiki rule `voetlab-framework-conventions-...`) govern
 every file:
 
 - **One distinct feature = one file**, named as a pipeline unit.
@@ -75,13 +73,13 @@ every file:
 - **Co-located per-folder tests** that run on the canonical clip `football-1.mp4` and **dump
   inspectable artifacts** (`tests/out/<feature>/annotated.png` + `results.json`) so a human can
   *see* results and pinpoint failures.
-- **Standalone**: no `src.`/repo imports inside `pitchkit/` — copy the folder or `pip install -e`.
+- **Standalone**: no `src.`/repo imports inside `voetlab/` — copy the folder or `pip install -e`.
 - **Pipeline** = `@feature(name, deps=[...])` registry + `pipeline.runner` (dep-order exec,
   failure flagging, `run_feature()` isolation, `compare()`).
 
 ```
-pitchkit/                       project root (pyproject.toml, README.md, FEATURES.md)
-└── pitchkit/                   THE importable package
+voetlab/                       project root (pyproject.toml, README.md, FEATURES.md)
+└── voetlab/                   THE importable package
     ├── core/                   result, provenance, fixtures (footage harness)
     ├── detection/              detect.py (+ detect_ball SAHI specialist)
     ├── tracking/               player_tracker, ball_tracker, ball_trajectory(Kalman),
@@ -91,15 +89,14 @@ pitchkit/                       project root (pyproject.toml, README.md, FEATURE
     ├── events/                 events.py (possession/passes/duels, frame-provenanced)
     ├── stats/                  stats.py (px + metric), physical
     ├── tactics/                pitch_control (Spearman), voronoi, features
-    ├── reliability/            reliability.py + features (the PREDA signal)
+    ├── reliability/            reliability.py + features (the voetlab signal)
     ├── viz/                    charts.py (mplsoccer adapters)
     ├── pipeline/               registry, runner, default, cli
     ├── report.py               end-to-end report generator + CLI
     └── docs/                   build_docs.py + site/index.html + this log
 ```
 
-`src/` is unchanged and remains the original reference; each pitchkit feature's README maps to
-its `src/` origin.
+Each voetlab feature's README documents its quality profile and when to use it.
 
 ---
 
@@ -113,7 +110,7 @@ green between steps. ~40 todos across the session, all closed.
 | **Foundation** | F0–F6 | package scaffold; `Result`; provenance; footage harness; runner (isolation + downstream + compare); per-folder test template; doc generator |
 | **Pipeline port** | P1–P7 | detect → track → ball → teams → events → stats + `default.run()`/`run_feature()` + CLI |
 | **Quality upgrades** | T0–T13 | Kalman ball; HSV circularity; majority vote; GK/ref filter; homography; metric stats; per-frame possession; ball-detector config; BoT-SORT factory; reliability; pitch control; Voronoi; viz |
-| **Docs** | D1–D3 | per-file "Quality & when to use" headers; per-folder READMEs; `src/` preserved + mapped |
+| **Docs** | D1–D3 | per-file "Quality & when to use" headers; per-folder READMEs |
 | **Calibration + polish** | B1–B4 | TVCalib full solver (accurate metres); reliability wired into the pipeline; report generator; top-level API |
 
 ---
@@ -185,10 +182,10 @@ This is the clearest example of "measure → don't assume → find the real caus
 
 Decisions (`docs/wiki/decisions/`):
 - `adopt-verified-cv-analytics-technique-stack-bot-sort-tvcalib` — the verified stack.
-- `extract-pitchkit-as-a-standalone-copyable-analytics-framework` — why `pitchkit` exists apart from `src/`.
+- `extract-voetlab-as-a-standalone-copyable-analytics-framework` — why `voetlab` exists as a standalone package.
 - `keep-bytetrack-as-default-tracker` — measured, not assumed.
 
-Rules (`docs/wiki/rules/`): pitchkit framework conventions; **measure technique swaps before
+Rules (`docs/wiki/rules/`): voetlab framework conventions; **measure technique swaps before
 flipping defaults**; read real video metadata (fps/frames) never hardcode; verify techniques
 online before planning; improvement todos are test-first + surgical.
 
@@ -200,7 +197,7 @@ Preference: **use `football-1.mp4` as the canonical test fixture**.
 
 - **T9 dead config** — `track_via_ultralytics` passed only `tracker/conf/classes`; the BoT-SORT
   `gmc_method`/`with_reid` never reached Ultralytics → CMC was dead code. Fix: ship a custom
-  `pitchkit_botsort.yaml` (CMC enabled) and point `tracker=` at it.
+  `voetlab_botsort.yaml` (CMC enabled) and point `tracker=` at it.
 - **HSV hue circularity (T1)** — red wraps hue 0↔180; raw-Euclidean KMeans split one red team.
   Fix: encode hue as `(cos, sin, S)` before KMeans.
 - **Events missing `type`** — `detect_events` attached `kind` via provenance but never set
@@ -229,8 +226,8 @@ Preference: **use `football-1.mp4` as the canonical test fixture**.
   helps once you have a *football* ball model (COCO class 32 ≠ football).
 - **ByteTrack ≥ BoT-SORT on the available footage** — don't flip defaults on theory; measure.
   (BoT-SORT's CMC win would show on extreme pan/zoom; validate there before flipping.)
-- **`src/` distances were pixels** — there was no homography to "improve"; it had to be *built*.
-- **pitchkit is the product's engine**; the webapp/dashboard (PREDA shell) is the remaining
+- **Distances were pixels** — there was no homography to "improve"; it had to be *built*.
+- **voetlab is the product's engine**; the webapp/dashboard (voetlab shell) is the remaining
   macro-workstream, deliberately deferred.
 
 ---
@@ -238,29 +235,29 @@ Preference: **use `football-1.mp4` as the canonical test fixture**.
 ## 10. Current state & how to use
 
 ```python
-import pitchkit
-res = pitchkit.run("football-1.mp4", max_frames=50, meta={
+import voetlab
+res = voetlab.run("football-1.mp4", max_frames=50, meta={
     "ball_model_path": "models/martinjolif_ball.pt",            # 98% ball recall
     "calib_checkpoint": "external/tvcalib/data/segment_localization/train_59.pt",  # accurate metres
     "tvcalib_path": "external/tvcalib"})
 res.value["data"]["stats"]        # per-player distance_m / top_speed_km_h
 res.value["data"]["reliability"]  # confidence on every number
 res.value["failed"]               # any feature that didn't finish
-pitchkit.run_feature("detect", "football-1.mp4")   # isolate one stage
+voetlab.run_feature("detect", "football-1.mp4")   # isolate one stage
 ```
 
-One-command report: `python -m pitchkit.report <video> --max-frames 50 --ball-model-path …
+One-command report: `python -m voetlab.report <video> --max-frames 50 --ball-model-path …
 --out report/` → `summary.json`, `stats.json`, `reliability.json`, `radar.png`,
 `pass_network.png`, `heatmap.png`.
 
-Tests: `python -m pytest pitchkit -q` (121 passed). Docs site: `pitchkit/docs/site/index.html`
-(auto-generated from source by `pitchkit.docs.build_docs`).
+Tests: `python -m pytest voetlab -q` (121 passed). Docs site: `voetlab/docs/site/index.html`
+(auto-generated from source by `voetlab.docs.build_docs`).
 
 ---
 
 ## 11. What's left (optional, documented)
 
-- **Webapp/dashboard** (PREDA product shell) — auth, match library, consumes `viz` Figures +
+- **Webapp/dashboard** (voetlab product shell) — auth, match library, consumes `viz` Figures +
   reliability badges. Deferred by request.
 - **Player-ID robustness** — jersey-number OCR + global-ID clustering (ReID) to replace
   track-ID fragmentation for true per-player career stats.

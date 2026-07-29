@@ -9,8 +9,8 @@ timestamp: "2026-07-29T17:16:52.594Z"
 
 | Term | Definition |
 |------|------------|
-| pitchkit | The standalone, copyable football video-analytics framework this project ships. Python 3.10+, MIT. |
-| PREDA | The product (statspreda.com) that pitchkit powers — broadcast-footage match analytics. |
+| voetlab | The standalone, copyable football video-analytics framework this project ships. Python 3.10+, MIT. |
+| voetlab | The product (voetlab.nl) that voetlab powers — broadcast-footage match analytics. |
 | Result | The universal success indicator (`core.result`). Every feature returns `Result.Ok(value, **meta)` / `Result.Fail(error, **meta)`; `bool(result)` reads success. |
 | Provenance | Frame traceability (`core.provenance.attach_provenance`). Stamps each event with the `source_frames` it came from. |
 | Feature | A single pipeline unit, one per file, registered via `@feature(name, deps=[...])`. |
@@ -28,7 +28,7 @@ timestamp: "2026-07-29T17:16:52.594Z"
 | ID fragmentation | A tracking failure where one player gets many IDs across pan/zoom — degrades per-player stats. |
 | Pitch control | (Tactics) Spearman-style field giving P(team A controls) at each pitch point from player reach/time-to-reach. |
 | Voronoi / dominant region | (Tactics) Tessellation of the pitch into each player's nearest territory; yields team-area ratio. |
-| Reliability signal | PREDA's product moat: an honest, automatic per-stat confidence derived from measurable CV-quality (ball coverage, tracking stability, interpolation ratio, calibration confidence). |
+| Reliability signal | voetlab's product moat: an honest, automatic per-stat confidence derived from measurable CV-quality (ball coverage, tracking stability, interpolation ratio, calibration confidence). |
 | Footage-driven test | A feature's co-located test that runs on `football-1.mp4`, asserts `Result.ok`, and dumps artifacts to `tests/out/<feature>/`. |
 | `[vision]` / `[viz]` / `[dev]` | Optional extras in `pyproject.toml`: vision = ultralytics+supervision; viz = matplotlib+mplsoccer; dev = pytest. |
 | OKF | The knowledge-wiki bundle format this `docs/wiki/` follows (concepts, decisions, rules, learnings, preferences). |

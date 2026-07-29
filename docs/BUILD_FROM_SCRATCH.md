@@ -1,13 +1,13 @@
-# pitchkit — Build-from-Scratch Guide for an LLM
+# voetlab — Build-from-Scratch Guide for an LLM
 
-> **Goal:** reproduce the `pitchkit` framework **exactly** — same files, same logic, same
+> **Goal:** reproduce the `voetlab` framework **exactly** — same files, same logic, same
 > behaviour — by following these ordered, TDD-locked todos. If you (an LLM) complete every
 > phase, you will arrive at a package with **121 passing tests** that runs the full
 > broadcast-football pipeline (detect → track → ball → teams → events → stats) with high ball
 > recall, accurate metric calibration, an auto reliability signal, and a one-command report.
 >
-> **Reproduction contract:** `python -m pytest pitchkit -q` → **121 passed**; `import pitchkit;
-> pitchkit.run(video)` works standalone; `src/` (the original engine) stays untouched.
+> **Reproduction contract:** `python -m pytest voetlab -q` → **121 passed**; `import voetlab;
+> voetlab.run(video)` works standalone.
 
 ---
 
@@ -15,13 +15,13 @@
 
 - Work **top to bottom**; each phase depends on the prior. Use the `todo` tool to track each
   `TODO` block (create → claim → do → done). **TDD is mandatory:** write the test first (red),
-  implement (green); only green marks a todo done. Keep `pytest pitchkit -q` green between
+  implement (green); only green marks a todo done. Keep `pytest voetlab -q` green between
   phases.
 - **Conventions (non-negotiable)** — every feature file obeys the rule
-  `pitchkit-framework-conventions-...`: one feature per file; every feature function returns
+  `voetlab-framework-conventions-...`: one feature per file; every feature function returns
   `core.result.Result`; every event carries `source_frames` via `core.provenance`; each file
   has a co-located `tests/` with a footage-driven test that dumps artifacts to
-  `pitchkit/tests/out/<feature>/`; **no `src.`/repo imports inside `pitchkit/`** (standalone,
+  `voetlab/tests/out/<feature>/`; **no `src.`/repo imports inside `voetlab/`** (standalone,
   copyable).
 - **Data contracts** (memorize — every feature's I/O conforms):
   - `detect`/`ball`/`track` values are `{"frames": {frame_no(int): [...]}}`.
@@ -49,14 +49,14 @@
 ---
 
 ## Phase 0 — Scaffold the standalone package  *(TODO F0)*
-- Create `pitchkit/pyproject.toml` (name=pitchkit, requires-python>=3.10; core deps + optional
-  extras `[vision]`, `[viz]`, `[dev]`) and the **nested** layout `pitchkit/pitchkit/` (the
+- Create `voetlab/pyproject.toml` (name=voetlab, requires-python>=3.10; core deps + optional
+  extras `[vision]`, `[viz]`, `[dev]`) and the **nested** layout `voetlab/voetlab/` (the
   importable package) with `__init__.py` (`__version__="0.1.0"`) + domain folders `core
   detection tracking calibration events stats tactics reliability viz pipeline docs`, each with
-  `__init__.py`, and `pitchkit/tests/`.
-- **Test (red→green):** `pitchkit/tests/test_imports.py` asserts `import pitchkit` +
+  `__init__.py`, and `voetlab/tests/`.
+- **Test (red→green):** `voetlab/tests/test_imports.py` asserts `import voetlab` +
   `__version__` + every subpackage resolves.
-- **Accept:** `pip install -e ./pitchkit --no-deps` works; `import pitchkit` from a **clean
+- **Accept:** `pip install -e ./voetlab --no-deps` works; `import voetlab` from a **clean
   cwd** works; pytest green. *(Critical: nested layout — flat layout silently breaks the
   editable install.)*
 
@@ -118,10 +118,10 @@
   Result({"roles":{tid:"player"|"gk"|"referee"}})` via bbox-centroid heuristics (referee =
   large x-spread + many frames; gk = confined to edge band). `@feature("roles", deps=["track"])`.
 - `tracking/tracker_factory.py` (T9) — `build_tracker(name, *, reid, gmc)` returns a config
-  dict; `"botsort"` → engine ultralytics + the shipped `pitchkit_botsort.yaml` (CMC
+  dict; `"botsort"` → engine ultralytics + the shipped `voetlab_botsort.yaml` (CMC
   `gmc_method: sparseOptFlow`); `"bytetrack"` → supervision. `track_via_ultralytics(video,
   model_path, tracker=None, ...)` runs `model.track(tracker=<our yaml>)`. Ship
-  `pitchkit/pitchkit/tracking/pitchkit_botsort.yaml` (the CMC config — this fixes the dead-config bug).
+  `voetlab/voetlab/tracking/voetlab_botsort.yaml` (the CMC config — this fixes the dead-config bug).
 - **Tests:** synthetic-data unit tests for each (consistent track_ids; interpolation coverage;
   circular-hue clusters wrapped reds; majority vote; role heuristics; factory config). All
   co-located in `tracking/tests/`.
@@ -202,7 +202,7 @@
   `run(video, *, max_frames, meta, features)` inserts `"detect_ball"` before `"ball"` when
   `meta["ball_model_path"]`, and `"calibrate"` before the first metric feature when
   `meta["calib_checkpoint"]`; `run_feature(name, video, meta)`.
-- `pipeline/cli.py` — `python -m pitchkit.pipeline.cli <video> [--feature NAME] [--max-frames N]
+- `pipeline/cli.py` — `python -m voetlab.pipeline.cli <video> [--feature NAME] [--max-frames N]
   [--ball-model-path P] [--calib-checkpoint P]`; dumps `tests/out/<tag>/results.json`.
 - **Test (`pipeline/tests/test_default.py`):** all features registered; `run_feature("detect")`
   isolation (mocked model); a subset run; **e2e smoke on football-1.mp4** (5 frames) →
@@ -212,13 +212,13 @@
 - `report.py` — `report(video, out_dir, *, max_frames, meta)` runs the pipeline and writes
   `summary.json`, `stats.json`, `reliability.json`, and best-effort `radar.png`/
   `pass_network.png`/`heatmap.png` (positions normalized to the statsbomb pitch when no H).
-  `main(argv)` CLI `python -m pitchkit.report <video> [--out DIR] ...`.
-- **Test (`tests/test_report.py`):** monkeypatch `pitchkit.pipeline.default.run` → fake Result;
+  `main(argv)` CLI `python -m voetlab.report <video> [--out DIR] ...`.
+- **Test (`tests/test_report.py`):** monkeypatch `voetlab.pipeline.default.run` → fake Result;
   assert summary/stats/reliability/radar written; failing-pipeline still writes summary.
 
 ## Phase 13 — Packaging + docs  *(TODOs B4, F6, D1, D2, D3)*
-- `__init__.py` (B4) — `from pitchkit.pipeline.default import run, run_feature`; `__all__`.
-  Verify `import pitchkit; pitchkit.run` from a **clean cwd**.
+- `__init__.py` (B4) — `from voetlab.pipeline.default import run, run_feature`; `__all__`.
+  Verify `import voetlab; voetlab.run` from a **clean cwd**.
 - `docs/build_docs.py` (F6) — scans feature `.py`, extracts docstring summary + the
   `# === Quality & when to use ===` block, emits `FEATURES.md` (manifest table) +
   `docs/site/index.html` (sidebar nav, collapsible cards, search, dark mode, print). `docs/tests/
@@ -227,7 +227,7 @@
 - **D1** — each feature file opens with a `# === Quality & when to use (for devs / LLMs) ===`
   comment block (What/Does/GOOD/WEAK/When/Upgrade). **D2** — an LLM/dev-focused `README.md` in
   every domain folder (what's here / how to use / when / quality / tests / not-here-yet / src
-  mapping). **D3** — verify `src/` untouched + each README maps to its `src/` origin.
+  mapping). **D3** — each README documents quality and when to use the feature.
 
 ## Phase 14 — (Optional) External TVCalib for accurate calibration
 Only needed to make `calibrate` produce real metres (otherwise it fails gracefully → pixels).
@@ -236,7 +236,7 @@ Only needed to make `calibrate` produce real metres (otherwise it fails graceful
   https://tib.eu/cloud/s/x68XnTcZmsY4Jpg/download/train_59.pt -o
   external/tvcalib/data/segment_localization/train_59.pt`.
 - `pip install kornia soccernet pytorch-lightning`.
-- **Three compat shims** in the external copy (research code predates torch 2.x / cv2 4.x):
+- **Three compat shims** in the vendored research code (predates torch 2.x / cv2 4.x):
   1. `tvcalib/sncalib_dataset.py`: `from torch._six import string_classes` → fallback
      `string_classes = (str, bytes)`.
   2. `tvcalib/inference.py`: `torch.load(checkpoint)` → `torch.load(checkpoint,
@@ -250,34 +250,34 @@ Only needed to make `calibrate` produce real metres (otherwise it fails graceful
 
 ## Final acceptance (the reproduction is correct when ALL hold)
 
-1. `python -m pytest pitchkit -q` → **121 passed**.
-2. `cd /tmp && python -c "import pitchkit; print(pitchkit.__version__, pitchkit.run)"` works
+1. `python -m pytest voetlab -q` → **121 passed**.
+2. `cd /tmp && python -c "import voetlab; print(voetlab.__version__, voetlab.run)"` works
    (truly standalone, not path-dependent).
-3. `python -m pitchkit.pipeline.cli football-1.mp4 --max-frames 30` → artifacts written, no
+3. `python -m voetlab.pipeline.cli football-1.mp4 --max-frames 30` → artifacts written, no
    failed features.
 4. With the martinjolif ball model: `detect_ball` ≈ **98% ball coverage** on football-1.mp4.
 5. With TVCalib (Phase 14): `calibrate` method `tvcalib_solver`, `loss_ndc_total < 0.019`, and
    `stats` players have sane `distance_m` (single-digit metres over ~30 frames) — not 1e15.
-6. `python -m pitchkit.report football-1.mp4 --out report/` writes summary + stats +
+6. `python -m voetlab.report football-1.mp4 --out report/` writes summary + stats +
    reliability + radar/pass-network/heatmap.
-7. `src/` is unchanged from the original repo.
+7. The framework is standalone (no legacy engine bundled).
 
 ## Reference: the target file tree (28 source files)
 ```
-pitchkit/pitchkit/{__init__,report}.py
-pitchkit/pitchkit/core/{result,provenance,fixtures}.py
-pitchkit/pitchkit/detection/detect.py
-pitchkit/pitchkit/tracking/{player_tracker,ball_tracker,ball_trajectory,team_classifier,
-                            role_filter,tracker_factory}.py + pitchkit_botsort.yaml
-pitchkit/pitchkit/calibration/{homography,homography_lines,keypoint,metric,
+voetlab/voetlab/{__init__,report}.py
+voetlab/voetlab/core/{result,provenance,fixtures}.py
+voetlab/voetlab/detection/detect.py
+voetlab/voetlab/tracking/{player_tracker,ball_tracker,ball_trajectory,team_classifier,
+                            role_filter,tracker_factory}.py + voetlab_botsort.yaml
+voetlab/voetlab/calibration/{homography,homography_lines,keypoint,metric,
                                tvcalib_solver,features}.py
-pitchkit/pitchkit/events/events.py
-pitchkit/pitchkit/stats/stats.py
-pitchkit/pitchkit/tactics/{pitch_control,voronoi,features}.py
-pitchkit/pitchkit/reliability/{reliability,features}.py
-pitchkit/pitchkit/viz/charts.py
-pitchkit/pitchkit/pipeline/{registry,runner,default,cli}.py
-pitchkit/pitchkit/docs/build_docs.py
+voetlab/voetlab/events/events.py
+voetlab/voetlab/stats/stats.py
+voetlab/voetlab/tactics/{pitch_control,voronoi,features}.py
+voetlab/voetlab/reliability/{reliability,features}.py
+voetlab/voetlab/viz/charts.py
+voetlab/voetlab/pipeline/{registry,runner,default,cli}.py
+voetlab/voetlab/docs/build_docs.py
 ```
 Plus ~25 co-located `tests/test_*.py` files (one or more per feature) and per-folder
 `README.md`s. `FEATURES.md` + `docs/site/index.html` are **generated**, not hand-written.

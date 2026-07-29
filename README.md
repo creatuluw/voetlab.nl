@@ -1,20 +1,19 @@
-# pitchkit
+# voetlab
 
 Standalone, copyable football video-analytics framework. Broadcast video in → detection,
 tracking, pitch calibration, events, physical/tactical stats, a per-stat reliability signal,
 and charts.
 
-pitchkit is the engine of **PREDA** (statspreda.com). The original Telegram-bot prototype
-lives untouched in `../src/`; pitchkit is a separate, self-contained package — copy the folder
-or `pip install -e`.
+voetlab is the engine behind **voetlab.nl** — a separate, self-contained package: copy the
+folder or `pip install -e`.
 
 ## Quickstart
 
 ```python
-import pitchkit
+import voetlab
 
 # Full pipeline: detect → track → ball → teams → events → stats → reliability
-res = pitchkit.run("football-1.mp4", max_frames=50, meta={
+res = voetlab.run("football-1.mp4", max_frames=50, meta={
     "ball_model_path": "models/martinjolif_ball.pt",            # ~98% ball recall (SAHI)
     "calib_checkpoint": "external/tvcalib/data/segment_localization/train_59.pt",  # accurate metres
     "tvcalib_path": "external/tvcalib",
@@ -23,20 +22,20 @@ res.value["data"]["stats"]        # per-player distance_m / top_speed_km_h
 res.value["data"]["reliability"]  # confidence on every number
 res.value["failed"]               # any feature that didn't finish
 
-pitchkit.run_feature("detect", "football-1.mp4")   # isolate one stage
+voetlab.run_feature("detect", "football-1.mp4")   # isolate one stage
 ```
 
 One-command report (JSON + charts):
 ```bash
-python -m pitchkit.report football-1.mp4 --max-frames 50 --out report/ \
+python -m voetlab.report football-1.mp4 --max-frames 50 --out report/ \
     --ball-model-path models/martinjolif_ball.pt
 ```
 
 ## Install (in any project)
 
 ```bash
-pip install -e "./pitchkit[vision,viz]"
-# …or copy the inner `pitchkit/pitchkit/` folder into another project and `import pitchkit`.
+pip install -e "./voetlab[vision,viz]"
+# …or copy the inner `voetlab/` folder into another project and `import voetlab`.
 ```
 
 Extras: `[vision]` (ultralytics + supervision), `[viz]` (matplotlib + mplsoccer), `[dev]`
@@ -47,7 +46,7 @@ for accurate metric calibration.
 ## Layout
 
 ```
-pitchkit/
+voetlab/
   core/        Result (success indicator), provenance, footage fixtures
   detection/   YOLO person+ball detection, SAHI specialist ball detector (detect_ball)
   tracking/    player/ball trackers, Kalman trajectory, team classifier, role filter,
@@ -57,7 +56,7 @@ pitchkit/
   events/      possession, passes, tackles, interceptions (all frame-provenanced)
   stats/       physical + aggregate stats (pixels + metres/km·h when calibrated)
   tactics/     Spearman pitch control, Voronoi dominant regions
-  reliability/ per-stat confidence (the PREDA "reliability signal")
+  reliability/ per-stat confidence (the voetlab "reliability signal")
   viz/         mplsoccer chart adapters (heatmap, pass-network, radar)
   pipeline/    feature registry + runner (dep-order, isolation, compare) + default + cli
   report.py    end-to-end report generator + CLI
@@ -70,12 +69,12 @@ pitchkit/
 - **Returns `core.result.Result`** (`ok / value / error / meta`) — `bool(result)` reads success.
 - **Events carry frame provenance** (`source_frames`) via `core.provenance`.
 - **Footage-driven test per file**: runs on the canonical clip `football-1.mp4`, asserts
-  `Result.ok`, and dumps artifacts to `pitchkit/tests/out/<feature>/` so you can *see* results.
+  `Result.ok`, and dumps artifacts to `voetlab/tests/out/<feature>/` so you can *see* results.
 
 ## Test
 
 ```bash
-python -m pytest pitchkit -q      # 121 tests
+python -m pytest voetlab -q      # 121 tests
 ```
 
 ## Pipeline core

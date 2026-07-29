@@ -9,7 +9,7 @@ timestamp: "2026-07-29T17:22:43.126Z"
 # Reliability signal has a hardcoded component
 
 The `reliability` domain publishes a per-stat trust signal, but not all of its
-components are actually measured. Reading the source (`pitchkit/reliability/`)
+components are actually measured. Reading the source (`voetlab/reliability/`)
 reveals two honest limitations that affect how the composite scores should be
 interpreted:
 
@@ -22,7 +22,7 @@ interpreted:
 The genuinely measured components are `ball_coverage`, `interpolation_ratio`,
 and the composites built from them.
 
-**Why it matters:** Anyone building on PREDA/pitchkit stats or debugging
+**Why it matters:** Anyone building on voetlab/voetlab stats or debugging
 "why is reliability X?" must know the calibration axis of the reliability score
 is currently a constant, not a real signal. Documented (as of the refreshed
-README) in `pitchkit/reliability/README.md` under Quality & limitations.
+README) in `voetlab/reliability/README.md` under Quality & limitations.

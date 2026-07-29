@@ -1,1 +1,1 @@
-"""pitchkit tests (co-located per domain)."""
+"""voetlab tests (co-located per domain)."""
