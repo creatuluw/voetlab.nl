@@ -16,7 +16,7 @@ features (teams, events, stats) read it via ``state.get("track")``.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Callable, Optional
 
 import numpy as np
 
@@ -49,11 +49,14 @@ def track_players(
     track_activation_threshold: float = 0.5,
     lost_track_buffer: int = 60,
     minimum_matching_threshold: float = 0.8,
+    progress: Optional[Callable[[dict], None]] = None,
 ) -> Result:
     """Track persons across frames.
 
     Args:
         detections_value: ``detect`` output ``{"frames": {frame_no: [box_dicts]}}``.
+        progress: optional ``callable(event)``; emits throttled per-frame ``frame`` events
+            (stage ``"track"``) so the UI doesn't look frozen during this stage.
 
     Returns:
         ``Result(value={"frames": {frame_no: [{track_id, x1,y1,x2,y2,confidence}]}})``.
@@ -71,8 +74,11 @@ def track_players(
         frame_rate=fps,
     )
 
+    total = len(frames_in)
     out: dict[int, list[dict]] = {}
-    for f in sorted(frames_in):
+    # idx is 1-indexed to match detect's currentFrame; the inner loop reuses `i`, so we
+    # keep a separate frame counter here to avoid a stale value in the progress emit.
+    for idx, f in enumerate(sorted(frames_in), start=1):
         persons = [b for b in frames_in[f] if b.get("class") == PERSON]
         tracked = tracker.update_with_detections(_person_detections(persons))
         lst = []
@@ -88,6 +94,14 @@ def track_players(
                     }
                 )
         out[f] = lst
+        # ponytail: throttle per-frame progress to ~every 20 frames so the SSE isn't flooded;
+        # the runner already emits start/stage_done around this stage.
+        if progress and idx % 20 == 0:
+            progress({"type": "frame", "stage": "track",
+                      "currentFrame": idx, "totalFrames": total})
+    if progress:  # always complete the bar
+        progress({"type": "frame", "stage": "track",
+                  "currentFrame": total, "totalFrames": total})
 
     return Result.Ok({"frames": out}, feature="track", frames=len(out))
 
@@ -98,4 +112,4 @@ def _track_feature(state: PipelineState) -> Result:
     if not det:
         return Result.Fail("upstream detect missing", feature="track")
     meta = state.meta or {}
-    return track_players(det, fps=meta.get("fps", 25))
+    return track_players(det, fps=meta.get("fps", 25), progress=state.progress)

@@ -16,6 +16,8 @@ Consumes the ``detect`` feature's ball boxes and fills gaps between sparse detec
 
 from __future__ import annotations
 
+from typing import Callable, Optional
+
 from voetlab.core.result import Result
 from voetlab.detection.detect import BALL
 from voetlab.pipeline.registry import feature
@@ -36,7 +38,8 @@ def _interp(a: dict, b: dict, t: float) -> dict:
     }
 
 
-def track_ball(detections_value, *, total_frames: int | None = None, max_gap: int = 100) -> Result:
+def track_ball(detections_value, *, total_frames: int | None = None, max_gap: int = 100,
+               progress: Optional[Callable[[dict], None]] = None) -> Result:
     """Build a per-frame ball box dict (or None) across ``total_frames``.
 
     Returns ``Result(value={"frames": {frame_no: ball_box|None}})`` with ``meta`` coverage.
@@ -71,6 +74,12 @@ def track_ball(detections_value, *, total_frames: int | None = None, max_gap: in
 
     total_ball = sum(1 for v in out.values() if v is not None)
     coverage = (total_ball / total_frames) if total_frames else 0.0
+    # ponytail: linear interp has no expensive per-frame loop, so we only signal completion
+    # here (the bar jumps to done). The genuinely slow ball path is track_ball_kalman
+    # (ball_trajectory.py), which emits throttled per-frame progress of its own.
+    if progress:
+        progress({"type": "frame", "stage": "ball",
+                  "currentFrame": total_frames, "totalFrames": total_frames})
     return Result.Ok(
         {"frames": out},
         feature="ball",
@@ -89,5 +98,6 @@ def _ball_feature(state: PipelineState) -> Result:
     meta = state.meta or {}
     if meta.get("ball_method") == "kalman":  # T6 upgrade: Kalman trajectory
         from voetlab.tracking.ball_trajectory import track_ball_kalman
-        return track_ball_kalman(det, total_frames=meta.get("total_frames"))
-    return track_ball(det, total_frames=meta.get("total_frames"), max_gap=meta.get("max_gap", 100))
+        return track_ball_kalman(det, total_frames=meta.get("total_frames"), progress=state.progress)
+    return track_ball(det, total_frames=meta.get("total_frames"), max_gap=meta.get("max_gap", 100),
+                      progress=state.progress)

@@ -14,6 +14,8 @@ Quality & when to use
 """
 from __future__ import annotations
 
+from typing import Callable, Optional
+
 import numpy as np
 
 from voetlab.core.result import Result
@@ -60,6 +62,7 @@ def track_ball_kalman(
     total_frames: int | None = None,
     process_noise: float = 1.0,
     meas_noise: float = 4.0,
+    progress: Optional[Callable[[dict], None]] = None,
 ) -> Result:
     """Build a per-frame ball box for EVERY frame via a constant-velocity Kalman filter.
 
@@ -94,6 +97,13 @@ def track_ball_kalman(
             cx, cy, w, h = km.x[0], km.x[1], km.w, km.h
             out[f] = {"x1": cx - w / 2, "y1": cy - h / 2, "x2": cx + w / 2, "y2": cy + h / 2,
                       "confidence": 0.0}
+        # ponytail: throttle per-frame progress to ~every 20 frames so the SSE isn't flooded.
+        if progress and f % 20 == 0:
+            progress({"type": "frame", "stage": "ball",
+                      "currentFrame": f, "totalFrames": total_frames})
+    if progress and total_frames:  # always complete the bar
+        progress({"type": "frame", "stage": "ball",
+                  "currentFrame": total_frames, "totalFrames": total_frames})
 
     covered = sum(1 for v in out.values() if v is not None)
     coverage = covered / total_frames if total_frames else 0.0

@@ -15,7 +15,7 @@ The pipeline's entry point. Registered as feature ``"detect"``; its output lands
 
 from __future__ import annotations
 
-from typing import Any, Optional, Sequence
+from typing import Any, Callable, Optional, Sequence
 
 import numpy as np
 
@@ -33,6 +33,23 @@ def _load_model(model_path: str):
     from ultralytics import YOLO
 
     return YOLO(model_path)
+
+
+def _frame_count(video) -> int:
+    """Best-effort total frame count for progress reporting.
+
+    Returns 0 if OpenCV is unavailable or the container can't report a count (the worker
+    path sets ``max_frames`` so this fallback is rarely exercised).
+    """
+    try:
+        import cv2
+
+        cap = cv2.VideoCapture(video)
+        n = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        cap.release()
+        return n
+    except Exception:
+        return 0
 
 
 def boxes_from_result(r) -> list[dict]:
@@ -71,7 +88,8 @@ def annotate(frame, boxes: list[dict], player_color=(0, 255, 0)):
     return out
 
 
-def _run_sahi(video, *, model_path, conf, classes, max_frames=None, slice_size=640, frames=None):
+def _run_sahi(video, *, model_path, conf, classes, max_frames=None, slice_size=640, frames=None,
+               progress: Optional[Callable[[dict], None]] = None):
     """Sliced (SAHI) inference for small-object recall — per frame. ``frames`` is injectable for tests."""
     import cv2
     from sahi import AutoDetectionModel
@@ -83,6 +101,14 @@ def _run_sahi(video, *, model_path, conf, classes, max_frames=None, slice_size=6
     out: dict[int, list[dict]] = {}
     iterator = frames if frames is not None else None
     cap = None if frames is not None else cv2.VideoCapture(video)
+    # ponytail: best-known total for progress only; frames-injected (tests) → len(frames),
+    # capped run → the cap, else a container probe. No effect on results.
+    if frames is not None:
+        total = len(frames)
+    elif max_frames:
+        total = max_frames
+    else:
+        total = _frame_count(video)
     i = 0
     while True:
         if frames is not None:
@@ -105,6 +131,8 @@ def _run_sahi(video, *, model_path, conf, classes, max_frames=None, slice_size=6
                 boxes.append({"x1": float(x1), "y1": float(y1), "x2": float(x2), "y2": float(y2),
                               "class": cid, "confidence": round(float(pred.score.value), 3)})
         out[i] = boxes
+        if progress:
+            progress({"type": "frame", "stage": "detect", "currentFrame": i, "totalFrames": total})
         if max_frames and i >= max_frames:
             break
     if cap is not None:
@@ -154,17 +182,20 @@ def detect(
     model: Any = None,
     sahi: bool = False,
     slice_size: int = 640,
+    progress: Optional[Callable[[dict], None]] = None,
 ) -> Result:
     """Run YOLO over ``video``; return ``Result(value={"frames": {frame_no: [boxes]}})``.
 
     ``model`` is injectable so tests can run without loading/downloading weights.
     ``sahi=True`` switches to sliced inference (small-object recall; needs a football-ball
     model to actually help — SAHI is orthogonal to the COCO class-32 problem).
+    ``progress`` is an optional ``callable(event: dict) -> None`` receiving per-frame events
+    (``{"type":"frame","stage":"detect","currentFrame":i,"totalFrames":n}``); omit for none.
     """
     if sahi:
         try:
             frames = _run_sahi(video, model_path=model_path, conf=conf, classes=list(classes),
-                               max_frames=max_frames, slice_size=slice_size)
+                               max_frames=max_frames, slice_size=slice_size, progress=progress)
         except Exception as exc:
             return Result.Fail(f"SAHI sliced inference failed: {exc}", feature="detect")
         if not frames:
@@ -177,8 +208,13 @@ def detect(
         stream = mdl(source=video, stream=True, conf=conf, classes=list(classes))
     except Exception as exc:
         return Result.Fail(f"detection inference failed: {exc}", feature="detect")
+    # ponytail: best-known total for progress only; the cap when set, else a container probe
+    # (a second open of the file — acceptable; the worker always sets max_frames).
+    total = max_frames if max_frames else _frame_count(video)
     for i, r in enumerate(stream, start=1):
         frames[i] = boxes_from_result(r)
+        if progress:
+            progress({"type": "frame", "stage": "detect", "currentFrame": i, "totalFrames": total})
         if max_frames and i >= max_frames:
             break
     if not frames:
@@ -221,4 +257,5 @@ def _detect_feature(state: PipelineState) -> Result:
         model=meta.get("model"),  # injectable for tests
         sahi=meta.get("sahi", False),
         slice_size=meta.get("slice_size", 640),
+        progress=state.progress,
     )

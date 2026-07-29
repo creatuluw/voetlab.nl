@@ -34,11 +34,11 @@ code{background:var(--card);border:1px solid var(--bd);padding:1px 5px;border-ra
 <details class="nav-group" open><summary>stats</summary><a href="#stats-stats.py">stats.py</a></details>
 <details class="nav-group" open><summary>tactics</summary><a href="#tactics-features.py">features.py</a><a href="#tactics-pitch_control.py">pitch_control.py</a><a href="#tactics-voronoi.py">voronoi.py</a></details>
 <details class="nav-group" open><summary>reliability</summary><a href="#reliability-features.py">features.py</a><a href="#reliability-reliability.py">reliability.py</a></details>
-<details class="nav-group" open><summary>viz</summary><a href="#viz-charts.py">charts.py</a></details>
+<details class="nav-group" open><summary>viz</summary><a href="#viz-annotate.py">annotate.py</a><a href="#viz-charts.py">charts.py</a></details>
 <details class="nav-group" open><summary>pipeline</summary><a href="#pipeline-cli.py">cli.py</a><a href="#pipeline-default.py">default.py</a><a href="#pipeline-registry.py">registry.py</a><a href="#pipeline-runner.py">runner.py</a></details>
 </aside><main>
 <header><h1>voetlab &mdash; standalone football video-analytics framework</h1>
-<div class="meta">Video &rarr; tracking, events, physical/tactical stats, viz. 28 feature files. Self-contained &amp; copyable.</div>
+<div class="meta">Video &rarr; tracking, events, physical/tactical stats, viz. 29 feature files. Self-contained &amp; copyable.</div>
 <div class="pipe"><span>detect</span>&rarr;<span>track</span>&rarr;<span>ball</span>&rarr;<span>teams</span>&rarr;<span>events</span>&rarr;<span>stats</span></div>
 <pre>from voetlab.pipeline.default import run, run_feature
 res = run("football-1.mp4", max_frames=50)         # full pipeline
@@ -134,6 +134,7 @@ When:  once you have metric (x, y) positions per player (calibration applied).
        Pass synthetic positions in tests; never feed pixel coords.</pre></details></section>
 <section class="card" id="reliability-features.py"><h2>reliability/<span>features.py</span></h2><p class="summary">Reliability feature — per-stat confidence from ball/track quality signals.</p><details><summary>Quality &amp; when to use</summary><pre>(see source)</pre></details></section>
 <section class="card" id="reliability-reliability.py"><h2>reliability/<span>reliability.py</span></h2><p class="summary">T10 — reliability signal: an honest per-stat confidence from measurable CV-quality signals.</p><details><summary>Quality &amp; when to use</summary><pre>(see source)</pre></details></section>
+<section class="card" id="viz-annotate.py"><h2>viz/<span>annotate.py</span></h2><p class="summary">Annotated-video renderer — burns voetlab analysis onto each source frame.</p><details><summary>Quality &amp; when to use</summary><pre>(see source)</pre></details></section>
 <section class="card" id="viz-charts.py"><h2>viz/<span>charts.py</span></h2><p class="summary">T13 — mplsoccer chart adapters (dashboard chart engine).</p><details><summary>Quality &amp; when to use</summary><pre>(see source)</pre></details></section>
 <section class="card" id="pipeline-cli.py"><h2>pipeline/<span>cli.py</span></h2><p class="summary">CLI: ``python -m voetlab.pipeline.cli &lt;video&gt; [--feature NAME] [--max-frames N]``.</p><details><summary>Quality &amp; when to use</summary><pre>(see source)</pre></details></section>
 <section class="card" id="pipeline-default.py"><h2>pipeline/<span>default.py</span></h2><p class="summary">P7 — default pipeline wiring + single-feature isolation.</p><details><summary>Quality &amp; when to use</summary><pre>(see source)</pre></details></section>

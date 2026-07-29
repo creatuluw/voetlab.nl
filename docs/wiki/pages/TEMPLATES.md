@@ -2,7 +2,7 @@
 type: Concept
 title: Page Templates
 description: Reference templates for Concept, Entity, and Artifact pages. Follow these when using wiki_note_page.
-timestamp: 2026-07-29T17:16:52.594Z
+timestamp: 2026-07-29T17:47:57.531Z
 ---
 # Page Templates
 

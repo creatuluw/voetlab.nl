@@ -7,18 +7,28 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Optional
+from typing import Any, Callable, Optional
+
+from voetlab.core.result import Result
 
 
-def report(video, out_dir, *, max_frames: Optional[int] = None, meta: Optional[dict] = None):
+def report(video, out_dir, *, max_frames: Optional[int] = None, meta: Optional[dict] = None,
+           features: Optional[list[str]] = None, progress: Optional[Callable[[dict], None]] = None,
+           result: Optional[Result] = None):
     """Run the full pipeline on ``video`` and write a report folder.
 
     Writes ``summary.json``, ``stats.json``, ``reliability.json`` and (best-effort) viz
     figures ``radar.png`` / ``pass_network.png`` / ``heatmap.png``. Returns ``(Result, Path)``.
+
+    Pass ``result=`` to reuse an already-computed pipeline ``Result`` (no re-run) — the iii
+    worker calls ``voetlab.run()`` with a progress callback, then hands the ``Result`` here
+    so the GPU-heavy pipeline runs exactly once. ``features``/``progress`` are forwarded to
+    ``run()`` only when ``result`` is None.
     """
     from voetlab.pipeline.default import run
 
-    res = run(video, max_frames=max_frames, meta=meta)
+    res = result if result is not None else run(video, max_frames=max_frames, meta=meta,
+                                                 features=features, progress=progress)
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
     data = res.value.get("data", {}) if res.ok else {}

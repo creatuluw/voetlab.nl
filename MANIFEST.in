@@ -1,0 +1,2 @@
+recursive-include voetlab/models *.pt
+recursive-include voetlab/external/tvcalib *

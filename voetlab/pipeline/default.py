@@ -7,7 +7,7 @@ one feature so you can inspect its results alone.
 """
 from __future__ import annotations
 
-from typing import Optional
+from typing import Callable, Optional
 
 from voetlab.core.result import Result
 from voetlab.pipeline import runner
@@ -27,8 +27,13 @@ DEFAULT_FEATURES = ["detect", "track", "ball", "teams", "events", "stats", "reli
 
 
 def run(video, *, max_frames: Optional[int] = None, meta: Optional[dict] = None,
-        features: Optional[list[str]] = None) -> Result:
+        features: Optional[list[str]] = None,
+        progress: Optional[Callable[[dict], None]] = None) -> Result:
     """Run the full pipeline (or a feature subset) over ``video``.
+
+    ``progress`` is an optional ``callable(event: dict) -> None`` forwarded to the runner;
+    it receives stage/frame events (see ``voetlab.pipeline.runner.run``). Default ``None``
+    keeps the original zero-overhead behavior.
 
     Returns ``Result`` whose ``value`` is ``{"data", "failed", "results"}`` — each
     feature's output is in ``value["data"][name]``; failed features are in ``value["failed"]``.
@@ -50,9 +55,10 @@ def run(video, *, max_frames: Optional[int] = None, meta: Optional[dict] = None,
                 break
         else:
             names.append("calibrate")
-    return runner.run(names=names, footage=video, meta=m)
+    return runner.run(names=names, footage=video, meta=m, progress=progress)
 
 
-def run_feature(name: str, video, *, meta: Optional[dict] = None) -> Result:
+def run_feature(name: str, video, *, meta: Optional[dict] = None,
+                progress: Optional[Callable[[dict], None]] = None) -> Result:
     """Run ONE feature in isolation (optionally pre-fill upstream via ``meta``)."""
-    return runner.run_feature(name, footage=video, meta=dict(meta or {}))
+    return runner.run_feature(name, footage=video, meta=dict(meta or {}), progress=progress)

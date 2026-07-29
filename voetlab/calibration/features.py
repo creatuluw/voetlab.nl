@@ -70,7 +70,14 @@ def _calibrate_feature(state: PipelineState) -> Result:
     idxs = (np.linspace(0, max(0, total - 1), num=12).astype(int) if total > 0 else [0])
     best_solver = None  # (loss, H, lines)
     best_dlt = None     # (err, H, lines)
-    for idx in idxs:
+    # Calibrate samples len(idxs) keypoints (not every frame), so progress reports the
+    # sampled-frame count as totalFrames — honest for this stage's loop.
+    progress = state.progress
+    n_samples = len(idxs)
+    for i, idx in enumerate(idxs, start=1):
+        if progress:
+            progress({"type": "frame", "stage": "calibrate",
+                      "currentFrame": i, "totalFrames": n_samples})
         cap.set(cv2.CAP_PROP_POS_FRAMES, int(idx))
         ok, frame = cap.read()
         if not ok:

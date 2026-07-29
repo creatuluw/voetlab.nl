@@ -17,7 +17,7 @@ HSV hue-circularity + per-track majority vote = T1/T2, later.
 
 from __future__ import annotations
 
-from typing import Callable, Iterable
+from typing import Callable, Iterable, Optional
 
 import numpy as np
 
@@ -99,6 +99,7 @@ def classify_teams(
     sample_frames: int = 100,
     frame_source: Iterable | None = None,
     k: int = 2,
+    progress: Optional[Callable[[dict], None]] = None,
 ) -> Result:
     """Assign each track_id to a team via KMeans on median torso HSV.
 
@@ -111,6 +112,7 @@ def classify_teams(
 
     track_colors: dict[int, list[list[float]]] = {}
     src = frame_source if frame_source is not None else _default_frame_source(video, sample_frames)
+    total = sample_frames
     for f, frame in src:
         if f > sample_frames:
             break
@@ -118,6 +120,14 @@ def classify_teams(
             c = extract_torso_hsv(frame, t)
             if c:
                 track_colors.setdefault(t["track_id"], []).append(c)
+        # ponytail: throttle per-frame progress to ~every 20 frames; totalFrames is the
+        # sample cap (teams scans at most sample_frames, NOT the whole clip).
+        if progress and f % 20 == 0:
+            progress({"type": "frame", "stage": "teams",
+                      "currentFrame": f, "totalFrames": total})
+    if progress:  # always complete the bar (also covers a clip shorter than sample_frames)
+        progress({"type": "frame", "stage": "teams",
+                  "currentFrame": total, "totalFrames": total})
 
     if len(track_colors) < k:
         return Result.Fail(f"not enough tracks with usable color ({len(track_colors)})", feature="teams")
@@ -136,4 +146,5 @@ def _teams_feature(state: PipelineState) -> Result:
     if not tracks:
         return Result.Fail("upstream track missing", feature="teams")
     meta = state.meta or {}
-    return classify_teams(state.footage, tracks, sample_frames=meta.get("sample_frames", 100))
+    return classify_teams(state.footage, tracks, sample_frames=meta.get("sample_frames", 100),
+                          progress=state.progress)
