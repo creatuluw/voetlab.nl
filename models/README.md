@@ -6,6 +6,9 @@ deploy time. The files here are **large binaries** — they are git-ignored (see
 `.gitignore` → `/models/*.pt`) and intentionally NOT committed; this README is the only
 tracked file, so the set is documented and reproducible even though the bytes live on FTP.
 
+**Canonical download host:** https://te9.dev/voetlab/models/ — the project's mirror of every
+weight below. Fetch into this folder (or into wherever your `meta` keys point).
+
 ## Manifest
 
 | File | Size | Purpose | Runtime key | Source |
@@ -39,8 +42,17 @@ voetlab.run(video, meta={
 
 ## Re-populating this folder
 
-If a weight is missing, restore it from its Source URL above into this folder, or copy it
-back from the package's vendored copy:
+Preferred — download from the canonical host:
+
+```bash
+curl -L -o models/yolov8s.pt               https://te9.dev/voetlab/models/yolov8s.pt
+curl -L -o models/martinjolif_ball.pt      https://te9.dev/voetlab/models/martinjolif_ball.pt
+curl -L -o models/rajatdave_ball.pt        https://te9.dev/voetlab/models/rajatdave_ball.pt
+curl -L -o models/yaku_ball.pt             https://te9.dev/voetlab/models/yaku_ball.pt
+curl -L -o models/tvcalib_calib_train59.pt https://te9.dev/voetlab/models/tvcalib_calib_train59.pt
+```
+
+Or copy back from the package's vendored copy (offline):
 
 ```bash
 # detection weights

@@ -20,6 +20,24 @@ opt-in via `meta["ball_model_path"]`; accurate metric calibration (TVCalib full 
 via `meta["calib_checkpoint"]` + `meta["tvcalib_path"]` — without these, the pipeline degrades
 gracefully (pixels instead of metres; standard YOLO ball).
 
+## Model weights
+
+Model weights are NOT bundled in git (large binaries). Fetch them from the canonical host
+**https://te9.dev/voetlab/models/** into a local `models/` dir and pass the paths via `meta`:
+
+- `yolov8s.pt` → `meta["model_path"]` — default YOLO detector (persons + ball)
+- `martinjolif_ball.pt` → `meta["ball_model_path"]` — SAHI football-ball model (~98% recall)
+- `tvcalib_calib_train59.pt` → `meta["calib_checkpoint"]` — TVCalib full camera solver → metres
+- alternate ball models: `rajatdave_ball.pt`, `yaku_ball.pt`
+
+```bash
+for f in yolov8s.pt martinjolif_ball.pt tvcalib_calib_train59.pt; do
+  curl -L -o "models/$f" "https://te9.dev/voetlab/models/$f"
+done
+```
+
+Full manifest (sizes, purposes, runtime keys) in `models/README.md`.
+
 ## Docs
 
 - [README](README.md): Install, quickstart, layout, conventions.

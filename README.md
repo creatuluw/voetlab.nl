@@ -43,6 +43,37 @@ Extras: `[vision]` (ultralytics + supervision), `[viz]` (matplotlib + mplsoccer)
 for high ball recall; the external `tvcalib` repo (see `docs/BUILD_FROM_SCRATCH.md` Phase 14)
 for accurate metric calibration.
 
+## Models & weights
+
+The framework needs model weights that are **not bundled in git** (they're large binaries).
+Download them from the canonical host **https://te9.dev/voetlab/models/** into a `models/`
+folder, then point the runtime at them via `meta`:
+
+| File | Runtime key | Purpose |
+|------|-------------|---------|
+| `yolov8s.pt` | `meta["model_path"]` | Default YOLO detector (persons + ball) |
+| `martinjolif_ball.pt` | `meta["ball_model_path"]` | High-recall SAHI football-ball model (~98%) |
+| `tvcalib_calib_train59.pt` | `meta["calib_checkpoint"]` | TVCalib calibration checkpoint → metres |
+
+```bash
+mkdir -p models
+for f in yolov8s.pt martinjolif_ball.pt tvcalib_calib_train59.pt; do
+  curl -L -o "models/$f" "https://te9.dev/voetlab/models/$f"
+done
+```
+
+```python
+voetlab.run("football-1.mp4", meta={
+    "model_path":       "models/yolov8s.pt",
+    "ball_model_path":  "models/martinjolif_ball.pt",
+    "calib_checkpoint": "models/tvcalib_calib_train59.pt",
+    "tvcalib_path":     "external/tvcalib",
+})
+```
+
+Without these the pipeline degrades gracefully (pixels instead of metres; standard YOLO ball).
+See `models/README.md` for the full manifest (incl. alternate ball models).
+
 ## Layout
 
 ```
